@@ -1,7 +1,7 @@
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 
-// Only the bot token is needed for this file
-const DISCORD_BOT_TOKEN = "MTM4NzIwODUxMDE1NjE3NzQ1OA.GmfQcu.iuSEECl2F56gCqkdF_v4sei1UIH67Mr-2SCgKA"; // <-- Replace with your actual bot token
+// Use environment variable for the bot token
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN; // Set this in your Railway or .env
 
 const client = new Client({
     intents: [
@@ -26,5 +26,10 @@ client.on('warn', (info) => {
 client.on('disconnect', () => {
     console.warn('Bot disconnected from Discord!');
 });
+
+if (!DISCORD_BOT_TOKEN) {
+    console.error('❌ DISCORD_BOT_TOKEN is not set!');
+    process.exit(1);
+}
 
 client.login(DISCORD_BOT_TOKEN);

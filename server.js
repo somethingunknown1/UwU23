@@ -94,7 +94,7 @@ app.get('/api/users', (req, res) => {
 app.get('/api/auth/discord', (req, res) => {
     const params = new URLSearchParams({
         client_id: '1387208510156177458',
-        redirect_uri: 'https://cursedlayerweb.vercel.app/api/auth/discord/callback',
+        redirect_uri: 'https://uwu23-production.up.railway.app/api/auth/discord/callback',
         response_type: 'code',
         scope: 'identify guilds.members.read'
     });
@@ -112,7 +112,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
             client_secret: 'Yx8sPXybWUp4GMfUCqLfUtB2F2Sc6QYa',
             grant_type: 'authorization_code',
             code,
-            redirect_uri: 'https://cursedlayerweb.vercel.app/api/auth/discord/callback',
+            redirect_uri: 'https://uwu23-production.up.railway.app/api/auth/discord/callback',
             scope: 'identify guilds.members.read'
         }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
 
