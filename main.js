@@ -254,4 +254,46 @@ document.addEventListener('DOMContentLoaded', async function() {
             adminForm.reset();
         };
     }
+
+    async function loadAdminUserData() {
+        const username = document.getElementById('admin-username').value.trim();
+        const userId = document.getElementById('admin-userid').value.trim();
+        if (!username && !userId) return;
+
+        // Try searching by userId first, then username
+        let query = userId || username;
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+        const users = await res.json();
+        if (users && users.length > 0) {
+            const user = users[0];
+            // Fill notes
+            document.getElementById('admin-notes').value = Array.isArray(user.notes) ? user.notes.join(', ') : (user.notes || '');
+            // Show application history
+            let appHistory = '';
+            if (user.applications && user.applications.length > 0) {
+                appHistory = '<strong>Application History:</strong><ul>' +
+                    user.applications.map((a, i) =>
+                        `<li>#${i + 1}: <b>${a.status ? a.status.toUpperCase() : ''}</b> - ${a.reason || ''} ${a.date ? '(' + new Date(a.date).toLocaleString() + ')' : ''}</li>`
+                    ).join('') +
+                    '</ul>';
+            } else {
+                appHistory = '<strong>Application History:</strong> None';
+            }
+            let historyDiv = document.getElementById('admin-app-history');
+            if (!historyDiv) {
+                historyDiv = document.createElement('div');
+                historyDiv.id = 'admin-app-history';
+                document.getElementById('admin-form').appendChild(historyDiv);
+            }
+            historyDiv.innerHTML = appHistory;
+        } else {
+            document.getElementById('admin-notes').value = '';
+            let historyDiv = document.getElementById('admin-app-history');
+            if (historyDiv) historyDiv.innerHTML = '<strong>Application History:</strong> None';
+        }
+    }
+
+    // Load data when username or userId fields lose focus
+    document.getElementById('admin-username').addEventListener('blur', loadAdminUserData);
+    document.getElementById('admin-userid').addEventListener('blur', loadAdminUserData);
 });
