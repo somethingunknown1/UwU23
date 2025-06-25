@@ -80,12 +80,23 @@ app.post('/api/users', (req, res) => {
     res.json({ success: true, user });
 });
 
-// Public: Search by username or userId
+// Admin login endpoint
+app.post('/api/admin/login', (req, res) => {
+    const { password } = req.body;
+    if (password === process.env.ADMIN_PASSWORD) {
+        req.session.isAdmin = true;
+        res.json({ success: true });
+    } else {
+        res.json({ success: false, error: 'Incorrect password' });
+    }
+});
+
+// User search endpoint
 app.get('/api/users/search', (req, res) => {
     const { q } = req.query;
-    if (!q) return res.status(400).json({ error: 'Missing search query' });
+    if (!q) return res.status(400).json([]);
     const data = readData();
-    const results = data.filter(u => u.userId === q || u.username.toLowerCase() === q.toLowerCase());
+    const results = data.filter(u => u.userId === q || (u.username && u.username.toLowerCase() === q.toLowerCase()));
     res.json(results);
 });
 
@@ -145,7 +156,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
         };
 
         // Redirect to homepage (or search panel)
-        res.redirect('/');
+        res.redirect(`/index.html?userId=${user.id}`);
     } catch (err) {
         console.error('Discord OAuth2 error:', err.response ? err.response.data : err);
         res.status(500).send('Discord authentication failed.');

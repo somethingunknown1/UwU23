@@ -19,17 +19,7 @@
         <button id="admin-signin-btn" style="background: #fff; color: #1976d2; border: none; padding: 0.5em 1em; border-radius: 4px; cursor: pointer;">Admin Sign In</button>
     </nav>
     <main>
-        <div class="container" id="main-content">
-            <h1>Hello, welcome to Cursed Layers website!</h1>
-            <p>
-                Here you can view your application results, see why you failed, and check any notes your account may have.<br>
-                If you find any bugs, notify <strong>cursedradiodemon</strong> so I can fix them.
-            </p>
-            <div id="discord-login-home" style="margin-top:2em;">
-                <button id="discord-login-btn-home" type="button">Login with Discord</button>
-            </div>
-        </div>
-        <!-- Admin Sign In Panel (hidden by default) -->
+        <!-- Admin Sign In Panel -->
         <div class="container" id="admin-signin-panel" style="display:none;">
             <h2>Admin Sign In</h2>
             <form id="admin-signin-form">
@@ -38,7 +28,7 @@
             </form>
             <div id="admin-signin-message"></div>
         </div>
-        <!-- Admin Panel (hidden by default) -->
+        <!-- Admin Panel -->
         <div class="container" id="admin-panel" style="display:none;">
             <h2>Admin Panel</h2>
             <div>Signed in as: <span id="admin-username-display"></span></div>
@@ -63,8 +53,8 @@
             </form>
             <div id="admin-message"></div>
         </div>
-        <!-- Search Panel (hidden by default) -->
-        <div class="container" id="search-panel" style="display:none;">
+        <!-- Search Panel -->
+        <div class="container" id="search-panel">
             <h2>Search User</h2>
             <form id="search-form">
                 <input type="text" id="search-query" placeholder="Enter Username or User ID" required />
