@@ -109,12 +109,18 @@ document.addEventListener('DOMContentLoaded', async function() {
             const notes = document.getElementById('admin-notes').value.split(',').map(n => n.trim()).filter(Boolean);
             const appStatus = document.getElementById('admin-app-status').value;
             const appReason = document.getElementById('admin-app-reason').value;
-            const adminPassword = document.getElementById('admin-password') ? document.getElementById('admin-password').value : '';
-            const applications = appStatus ? [{ status: appStatus, reason: appReason, date: new Date().toISOString() }] : [];
+            // No adminPassword field anymore
+            // Send only the new application entry, backend will append it
             const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, userId, notes, applications, adminPassword })
+                body: JSON.stringify({
+                    username,
+                    userId,
+                    notes,
+                    appStatus,
+                    appReason
+                })
             });
             const data = await res.json();
             document.getElementById('admin-message').textContent = data.success ? 'User saved!' : (data.error || 'Error');
@@ -141,7 +147,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                     <strong>Notes:</strong>
                     <ul>${(u.notes||[]).map(n => `<li>${n}</li>`).join('')}</ul>
                     <strong>Applications:</strong>
-                    <ul>${(u.applications||[]).map(a => `<li>${a.status} - ${a.reason} (${a.date ? new Date(a.date).toLocaleString() : ''})</li>`).join('')}</ul>
+                    <ul>
+                        ${(u.applications||[]).map((a, i) => 
+                            `<li>#${i+1}: <b>${a.status ? a.status.toUpperCase() : ''}</b> - ${a.reason || ''} ${a.date ? '(' + new Date(a.date).toLocaleString() + ')' : ''}</li>`
+                        ).join('')}
+                    </ul>
                 </div>
             `).join('');
         };
@@ -226,12 +236,18 @@ document.addEventListener('DOMContentLoaded', async function() {
             const notes = document.getElementById('admin-notes').value.split(',').map(n => n.trim()).filter(Boolean);
             const appStatus = document.getElementById('admin-app-status').value;
             const appReason = document.getElementById('admin-app-reason').value;
-            const adminPassword = document.getElementById('admin-password') ? document.getElementById('admin-password').value : '';
-            const applications = appStatus ? [{ status: appStatus, reason: appReason, date: new Date().toISOString() }] : [];
+            // No adminPassword field anymore
+            // Send only the new application entry, backend will append it
             const res = await fetch('/api/users', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, userId, notes, applications, adminPassword, adminUsername })
+                body: JSON.stringify({
+                    username,
+                    userId,
+                    notes,
+                    appStatus,
+                    appReason
+                })
             });
             const data = await res.json();
             document.getElementById('admin-message').textContent = data.success ? 'User saved!' : (data.error || 'Error');

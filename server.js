@@ -38,42 +38,45 @@ function writeAdminLogs(logs) {
     fs.writeFileSync(ADMIN_LOG_FILE, JSON.stringify(logs, null, 2));
 }
 
-// Admin: Add or update user (requires adminPassword)
+// Admin: Add or update user (append application results and merge notes)
 app.post('/api/users', (req, res) => {
-    const { username, userId, notes, applications, adminUsername } = req.body;
-    // No password check!
+    const { username, userId, notes, appStatus, appReason } = req.body;
     if (!username || !userId) return res.status(400).json({ error: 'Missing username or userId' });
-    let data = readData();
+
+    const data = readData();
     let user = data.find(u => u.userId === userId);
-    let action = '';
-    let changes = {};
+
     if (user) {
-        action = 'updated';
-        if (user.username !== username) changes.username = { from: user.username, to: username };
-        if (JSON.stringify(user.notes) !== JSON.stringify(notes)) changes.notes = { from: user.notes, to: notes };
-        if (JSON.stringify(user.applications) !== JSON.stringify(applications)) changes.applications = { from: user.applications, to: applications };
-        user.username = username;
-        user.notes = notes || user.notes;
-        user.applications = applications || user.applications;
+        // Merge notes (combine old and new, remove duplicates)
+        let newNotes = Array.isArray(notes) ? notes : (notes ? [notes] : []);
+        let existingNotes = Array.isArray(user.notes) ? user.notes : (user.notes ? [user.notes] : []);
+        user.notes = Array.from(new Set([...existingNotes, ...newNotes])).filter(n => n);
+
+        // Append new application result
+        if (!user.applications) user.applications = [];
+        if (appStatus || appReason) {
+            user.applications.push({
+                status: appStatus,
+                reason: appReason,
+                date: new Date().toISOString()
+            });
+        }
     } else {
-        action = 'added';
-        user = { id: uuidv4(), username, userId, notes: notes || [], applications: applications || [] };
+        // Create new user
+        user = {
+            username,
+            userId,
+            notes: Array.isArray(notes) ? notes : (notes ? [notes] : []),
+            applications: (appStatus || appReason) ? [{
+                status: appStatus,
+                reason: appReason,
+                date: new Date().toISOString()
+            }] : []
+        };
         data.push(user);
-        changes = { username, userId, notes, applications };
     }
+
     writeData(data);
-
-    // Log the action
-    const logs = readAdminLogs();
-    logs.push({
-        timestamp: new Date().toISOString(),
-        action,
-        userId,
-        admin: adminUsername || 'unknown',
-        changes
-    });
-    writeAdminLogs(logs);
-
     res.json({ success: true, user });
 });
 
