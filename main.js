@@ -87,4 +87,56 @@ document.addEventListener('DOMContentLoaded', function() {
             searchResults.innerHTML = html;
         };
     }
+
+    function renderKeycodePanel(user) {
+        const keycodePanel = document.getElementById('keycode-panel');
+        const keycodeResults = document.getElementById('keycode-results');
+        keycodePanel.style.display = '';
+        // Notes
+        let notesHtml = `<strong>Notes:</strong><ul>`;
+        (user.notes || []).forEach((n, i) => {
+            notesHtml += `<li>
+                <span id="note-text-${i}">${n}</span>
+                <button onclick="editNote(${i})">Edit</button>
+                <button onclick="deleteNote(${i})">Delete</button>
+            </li>`;
+        });
+        notesHtml += `</ul>`;
+        // Applications
+        let appsHtml = `<strong>Applications:</strong><ul>`;
+        (user.applications || []).forEach((a, i) => {
+            appsHtml += `<li>
+                <span id="app-text-${i}"><b>${a.status ? a.status.toUpperCase() : ''}</b> - ${a.reason || ''} ${a.date ? '(' + new Date(a.date).toLocaleString() + ')' : ''}</span>
+                <button onclick="editApp(${i})">Edit</button>
+                <button onclick="deleteApp(${i})">Delete</button>
+            </li>`;
+        });
+        appsHtml += `</ul>`;
+        keycodeResults.innerHTML = notesHtml + appsHtml;
+    }
+
+    document.getElementById('view-all-logs-btn').onclick = async function() {
+        const panel = document.getElementById('all-logs-panel');
+        const results = document.getElementById('all-logs-results');
+        panel.style.display = '';
+        const res = await fetch('/api/users');
+        const users = await res.json();
+        if (!users.length) {
+            results.textContent = 'No users found.';
+            return;
+        }
+        results.innerHTML = users.map(user => `
+            <div class="user-log">
+                <h4>${user.username} (${user.userId})</h4>
+                <strong>Notes:</strong>
+                <ul>${(user.notes||[]).map(n => `<li>${n}</li>`).join('')}</ul>
+                <strong>Applications:</strong>
+                <ul>
+                    ${(user.applications||[]).map((a, i) =>
+                        `<li>#${i+1}: <b>${a.status ? a.status.toUpperCase() : ''}</b> - ${a.reason || ''} ${a.date ? '(' + new Date(a.date).toLocaleString() + ')' : ''}</li>`
+                    ).join('')}
+                </ul>
+            </div>
+        `).join('');
+    };
 });
