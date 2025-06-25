@@ -171,6 +171,16 @@ app.get('/api/auth/me', (req, res) => {
     }
 });
 
+// New session endpoint
+app.get('/api/auth/session', (req, res) => {
+    // Example: req.session.user = { id, username, roles: [roleId1, roleId2], ... }
+    // You must set this in your Discord OAuth callback!
+    res.json({
+        user: req.session.user || null,
+        discordRoleId: process.env.DISCORD_ROLE_ID
+    });
+});
+
 // Endpoint to get admin logs
 app.get('/api/admin/logs', (req, res) => {
     res.json(readAdminLogs());
