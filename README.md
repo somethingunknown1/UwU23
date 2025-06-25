@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # My Website
 
 This is a simple, modern website starter project. It includes:
@@ -20,3 +21,6 @@ Open `index.html` in your browser to view the site. Edit the files to customize 
 
 - Admins can use the admin panel (to be built) to add users and notes.
 - Anyone can search by username or user ID to view notes and application history.
+=======
+# UwU
+>>>>>>> c7a9b0d7856c36ef371154691a87b06b2f82a767
