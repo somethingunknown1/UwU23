@@ -1,7 +1,8 @@
+require('dotenv').config();
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
 
 // Use environment variable for the bot token
-const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN; // Set this in your Railway or .env
+const DISCORD_BOT_TOKEN = process.env.DISCORD_BOT_TOKEN;
 
 const client = new Client({
     intents: [
