@@ -1,274 +1,64 @@
-document.addEventListener('DOMContentLoaded', async function() {
-    // UI elements
-    const mainContent = document.getElementById('main-content');
-    const adminPanel = document.getElementById('admin-panel');
-    const searchPanel = document.getElementById('search-panel');
-    const adminLink = document.getElementById('admin-link');
-    const searchLink = document.getElementById('search-link');
-    const discordLoginDiv = document.getElementById('discord-login');
-    const adminForm = document.getElementById('admin-form');
-    const discordLoginBtn = document.getElementById('discord-login-btn');
-    const adminSignInBtn = document.getElementById('admin-signin-btn');
-    const adminSignInPanel = document.getElementById('admin-signin-panel');
-    const adminSignInForm = document.getElementById('admin-signin-form');
-    const adminSignInMessage = document.getElementById('admin-signin-message');
-    // Logs button and panel
-    let logsBtn = document.getElementById('logs-btn');
-    let logsPanel = document.getElementById('logs-panel');
-    if (!logsBtn) {
-        logsBtn = document.createElement('button');
-        logsBtn.id = 'logs-btn';
-        logsBtn.textContent = 'Logs';
-        logsBtn.style.display = 'none';
-        logsBtn.style.marginLeft = '1em';
-        document.querySelector('nav').appendChild(logsBtn);
-    }
-    if (!logsPanel) {
-        logsPanel = document.createElement('div');
-        logsPanel.id = 'logs-panel';
-        logsPanel.className = 'container';
-        logsPanel.style.display = 'none';
-        logsPanel.innerHTML = `<h2>Admin Logs</h2><div id="logs-content"></div><button id="close-logs-btn" style="margin-top:1em;">Close</button>`;
-        document.body.appendChild(logsPanel);
-    }
-
-    // Helper to show/hide panels
-    function showPanel(panel) {
-        mainContent.style.display = panel === 'main' ? '' : 'none';
-        adminPanel.style.display = panel === 'admin' ? '' : 'none';
-        searchPanel.style.display = panel === 'search' ? '' : 'none';
-        if (adminSignInPanel) adminSignInPanel.style.display = panel === 'admin-signin' ? '' : 'none';
-        logsPanel.style.display = panel === 'logs' ? '' : 'none';
-    }
-
-    // Navigation
-    if (searchLink) searchLink.onclick = () => { showPanel('search'); return false; };
-    const homeLink = document.querySelector('nav a[href="index.html"]');
-    if (homeLink) homeLink.onclick = () => { showPanel('main'); return false; };
-
-    // Discord login button
-    if (discordLoginBtn) {
-        discordLoginBtn.onclick = () => {
+document.addEventListener('DOMContentLoaded', function() {
+    // Discord login
+    const btn = document.getElementById('discord-login-btn-home');
+    if (btn) {
+        btn.onclick = function() {
             window.location.href = '/api/auth/discord';
         };
     }
 
-    // Check if user is logged in (fetch from backend)
-    let user = null;
-    let hasAdminRole = false;
-    try {
-        const res = await fetch('/api/auth/me');
-        if (res.ok) {
-            const data = await res.json();
-            user = data;
-            hasAdminRole = !!data.hasAdminRole;
-        }
-    } catch (e) {
-        // Not logged in or error
+    // Auto-search after Discord login
+    const params = new URLSearchParams(window.location.search);
+    const userId = params.get('userId');
+    if (userId) {
+        document.getElementById('search-query').value = userId;
+        document.getElementById('search-form').dispatchEvent(new Event('submit'));
     }
 
-    if (user) {
-        // Hide login, show search, show admin link if allowed
-        if (discordLoginDiv) discordLoginDiv.style.display = 'none';
-        if (adminForm) adminForm.style.display = hasAdminRole ? '' : 'none';
-        if (adminLink) adminLink.style.display = hasAdminRole ? '' : 'none';
-        showPanel('search');
-        // Auto-search for the logged-in user
-        const resultsDiv = document.getElementById('search-results');
-        if (resultsDiv) {
-            const res = await fetch(`/api/users/search?q=${encodeURIComponent(user.userId)}`);
-            const users = await res.json();
-            if (!users.length) {
-                resultsDiv.textContent = 'No user found.';
-            } else {
-                resultsDiv.innerHTML = users.map(u => `
-                    <div class="user-profile">
-                        <h3>${u.username} (${u.userId})</h3>
-                        <strong>Notes:</strong>
-                        <ul>${(u.notes||[]).map(n => `<li>${n}</li>`).join('')}</ul>
-                        <strong>Applications:</strong>
-                        <ul>${(u.applications||[]).map(a => `<li>${a.status} - ${a.reason} (${a.date ? new Date(a.date).toLocaleString() : ''})</li>`).join('')}</ul>
-                    </div>
-                `).join('');
-            }
-        }
-    } else {
-        // Not logged in: show login, hide admin form, show main
-        if (discordLoginDiv) discordLoginDiv.style.display = '';
-        if (adminForm) adminForm.style.display = 'none';
-        if (adminLink) adminLink.style.display = 'none';
-        showPanel('main');
-    }
-
-    // Admin form submit
-    if (adminForm) {
-        adminForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('admin-username').value;
-            const userId = document.getElementById('admin-userid').value;
-            const notes = document.getElementById('admin-notes').value.split(',').map(n => n.trim()).filter(Boolean);
-            const appStatus = document.getElementById('admin-app-status').value;
-            const appReason = document.getElementById('admin-app-reason').value;
-            // No adminPassword field anymore
-            // Send only the new application entry, backend will append it
-            const res = await fetch('/api/users', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username,
-                    userId,
-                    notes,
-                    appStatus,
-                    appReason
-                })
-            });
-            const data = await res.json();
-            document.getElementById('admin-message').textContent = data.success ? 'User saved!' : (data.error || 'Error');
-            adminForm.reset();
+    // Admin sign in panel logic
+    const adminSigninBtn = document.getElementById('admin-signin-btn');
+    const adminSigninPanel = document.getElementById('admin-signin-panel');
+    const adminPanel = document.getElementById('admin-panel');
+    if (adminSigninBtn) {
+        adminSigninBtn.onclick = function() {
+            adminSigninPanel.style.display = '';
+            adminPanel.style.display = 'none';
         };
     }
 
-    // Search form submit
-    const searchForm = document.getElementById('search-form');
-    if (searchForm) {
-        searchForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const q = document.getElementById('search-query').value;
-            const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
-            const users = await res.json();
-            const resultsDiv = document.getElementById('search-results');
-            if (!users.length) {
-                resultsDiv.textContent = 'No user found.';
-                return;
-            }
-            resultsDiv.innerHTML = users.map(u => `
-                <div class="user-profile">
-                    <h3>${u.username} (${u.userId})</h3>
-                    <strong>Notes:</strong>
-                    <ul>${(u.notes||[]).map(n => `<li>${n}</li>`).join('')}</ul>
-                    <strong>Applications:</strong>
-                    <ul>
-                        ${(u.applications||[]).map((a, i) => 
-                            `<li>#${i+1}: <b>${a.status ? a.status.toUpperCase() : ''}</b> - ${a.reason || ''} ${a.date ? '(' + new Date(a.date).toLocaleString() + ')' : ''}</li>`
-                        ).join('')}
-                    </ul>
-                </div>
-            `).join('');
-        };
-    }
-
-    let adminSignedIn = false;
-    let adminUsername = null;
-
-    if (adminSignInBtn) {
-        adminSignInBtn.onclick = () => { showPanel('admin-signin'); };
-    }
-
+    // Admin login
+    const adminSignInForm = document.getElementById('admin-signin-form');
     if (adminSignInForm) {
-        adminSignInForm.onsubmit = async (e) => {
+        adminSignInForm.onsubmit = async function(e) {
             e.preventDefault();
             const password = document.getElementById('admin-signin-password').value;
-            if (password === 'Y$z4@Vq2#Lp1!eMx') {
-                adminSignedIn = true;
-                adminUsername = prompt("Enter your admin username for logs:", "admin");
-                showPanel('admin');
-                adminSignInMessage.textContent = '';
-                document.getElementById('admin-username-display').textContent = adminUsername || 'admin';
-                // Show admin panel and logs button, hide admin sign in button
-                if (adminLink) adminLink.style.display = '';
-                logsBtn.style.display = '';
-                if (adminSignInBtn) adminSignInBtn.style.display = 'none';
-                // Optionally, clear the password field
-                document.getElementById('admin-signin-password').value = '';
-            } else {
-                adminSignInMessage.textContent = 'Incorrect password.';
-            }
-        };
-    }
-
-    if (adminLink) {
-        adminLink.style.display = 'none';
-        adminLink.onclick = () => { showPanel('admin'); return false; };
-    }
-
-    // Logs button (only after admin sign in)
-    logsBtn.onclick = async () => {
-        showPanel('logs');
-        // Fetch logs from backend
-        const logsContent = document.getElementById('logs-content');
-        logsContent.textContent = 'Loading...';
-        try {
-            const res = await fetch('/api/admin/logs');
-            const logs = await res.json();
-            if (!logs.length) {
-                logsContent.textContent = 'No logs found.';
-            } else {
-                logsContent.innerHTML = logs.map(log => `
-                    <div class="log-entry" style="border-bottom:1px solid #ccc; margin-bottom:1em; padding-bottom:1em;">
-                        <div><strong>Time:</strong> ${new Date(log.timestamp).toLocaleString()}</div>
-                        <div><strong>Action:</strong> ${log.action}</div>
-                        <div><strong>User ID:</strong> ${log.userId}</div>
-                        <div><strong>Admin:</strong> ${log.admin}</div>
-                        <div><strong>Changes:</strong>
-                            <pre style="background:#f4f4f4; padding:0.5em; border-radius:4px;">${JSON.stringify(log.changes, null, 2)}</pre>
-                        </div>
-                    </div>
-                `).join('');
-            }
-        } catch {
-            logsContent.textContent = 'Failed to load logs.';
-        }
-    };
-
-    // Close logs panel
-    document.body.addEventListener('click', function(e) {
-        if (e.target && e.target.id === 'close-logs-btn') {
-            showPanel('admin');
-        }
-    });
-
-    // Admin form submit
-    if (adminForm) {
-        adminForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('admin-username').value;
-            const userId = document.getElementById('admin-userid').value;
-            const notes = document.getElementById('admin-notes').value.split(',').map(n => n.trim()).filter(Boolean);
-            const appStatus = document.getElementById('admin-app-status').value;
-            const appReason = document.getElementById('admin-app-reason').value;
-            // No adminPassword field anymore
-            // Send only the new application entry, backend will append it
-            const res = await fetch('/api/users', {
+            const res = await fetch('/api/admin/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    username,
-                    userId,
-                    notes,
-                    appStatus,
-                    appReason
-                })
+                body: JSON.stringify({ password })
             });
             const data = await res.json();
-            document.getElementById('admin-message').textContent = data.success ? 'User saved!' : (data.error || 'Error');
-            adminForm.reset();
+            if (data.success) {
+                adminPanel.style.display = '';
+                adminSigninPanel.style.display = 'none';
+                document.getElementById('admin-warning').style.display = '';
+            } else {
+                document.getElementById('admin-signin-message').textContent = data.error || 'Login failed';
+            }
         };
     }
 
+    // Admin panel: load notes and app history on blur
     async function loadAdminUserData() {
         const username = document.getElementById('admin-username').value.trim();
         const userId = document.getElementById('admin-userid').value.trim();
         if (!username && !userId) return;
-
-        // Try searching by userId first, then username
         let query = userId || username;
         const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
         const users = await res.json();
         if (users && users.length > 0) {
             const user = users[0];
-            // Fill notes
             document.getElementById('admin-notes').value = Array.isArray(user.notes) ? user.notes.join(', ') : (user.notes || '');
-            // Show application history
             let appHistory = '';
             if (user.applications && user.applications.length > 0) {
                 appHistory = '<strong>Application History:</strong><ul>' +
@@ -279,33 +69,50 @@ document.addEventListener('DOMContentLoaded', async function() {
             } else {
                 appHistory = '<strong>Application History:</strong> None';
             }
-            let historyDiv = document.getElementById('admin-app-history');
-            if (!historyDiv) {
-                historyDiv = document.createElement('div');
-                historyDiv.id = 'admin-app-history';
-                document.getElementById('admin-form').appendChild(historyDiv);
-            }
-            historyDiv.innerHTML = appHistory;
+            document.getElementById('admin-app-history').innerHTML = appHistory;
         } else {
             document.getElementById('admin-notes').value = '';
-            let historyDiv = document.getElementById('admin-app-history');
-            if (historyDiv) historyDiv.innerHTML = '<strong>Application History:</strong> None';
+            document.getElementById('admin-app-history').innerHTML = '<strong>Application History:</strong> None';
         }
     }
-
-    // Load data when username or userId fields lose focus
     document.getElementById('admin-username').addEventListener('blur', loadAdminUserData);
     document.getElementById('admin-userid').addEventListener('blur', loadAdminUserData);
 
-    let lastSearchedUser = null;
+    // Admin form submit
+    const adminForm = document.getElementById('admin-form');
+    if (adminForm) {
+        adminForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('admin-username').value;
+            const userId = document.getElementById('admin-userid').value;
+            const notes = document.getElementById('admin-notes').value.split(',').map(n => n.trim()).filter(Boolean);
+            const appStatus = document.getElementById('admin-app-status').value;
+            const appReason = document.getElementById('admin-app-reason').value;
+            const res = await fetch('/api/users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username,
+                    userId,
+                    notes,
+                    appStatus,
+                    appReason
+                })
+            });
+            const data = await res.json();
+            document.getElementById('admin-message').textContent = data.success ? 'User saved!' : (data.error || 'Error');
+            adminForm.reset();
+        };
+    }
 
+    // Search and Keycode logic
+    let lastSearchedUser = null;
     const searchForm = document.getElementById('search-form');
     const keycodeBtn = document.getElementById('keycode-btn');
     const keycodePanel = document.getElementById('keycode-panel');
     const keycodeResults = document.getElementById('keycode-results');
     const searchResults = document.getElementById('search-results');
 
-    // Show Keycode button only if user is admin (or always, if you want)
     function showKeycodeButton(show) {
         if (keycodeBtn) keycodeBtn.style.display = show ? '' : 'none';
     }
@@ -327,7 +134,6 @@ document.addEventListener('DOMContentLoaded', async function() {
             lastSearchedUser = user;
             showKeycodeButton(true);
             keycodePanel.style.display = 'none';
-            // Show normal search results
             let html = `<strong>Username:</strong> ${user.username}<br>`;
             html += `<strong>User ID:</strong> ${user.userId}<br>`;
             html += `<strong>Notes:</strong> <ul>${(user.notes||[]).map(n => `<li>${n}</li>`).join('')}</ul>`;
@@ -348,7 +154,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         keycodeBtn.onclick = function() {
             if (!lastSearchedUser) return;
             keycodePanel.style.display = '';
-            // Show notes with delete/edit
             let notesHtml = `<strong>Notes:</strong><ul>`;
             (lastSearchedUser.notes||[]).forEach((n, i) => {
                 notesHtml += `<li>
@@ -358,7 +163,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 </li>`;
             });
             notesHtml += `</ul>`;
-            // Show applications with delete/edit
             let appsHtml = `<strong>Applications:</strong><ul>`;
             (lastSearchedUser.applications||[]).forEach((a, i) => {
                 appsHtml += `<li>
