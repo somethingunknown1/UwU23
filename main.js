@@ -1,16 +1,44 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Discord login auto-search ---
+    // Navigation logic
+    const homeLink = document.getElementById('home-link');
+    const searchLink = document.getElementById('search-link');
+    const adminLink = document.getElementById('admin-link');
+    const mainContent = document.getElementById('main-content');
+    const searchPanel = document.getElementById('search-panel');
+    const adminSigninPanel = document.getElementById('admin-signin-panel');
+    const adminPanel = document.getElementById('admin-panel');
+
+    function showPanel(panel) {
+        mainContent.style.display = 'none';
+        searchPanel.style.display = 'none';
+        adminSigninPanel.style.display = 'none';
+        adminPanel.style.display = 'none';
+        if (panel) panel.style.display = '';
+    }
+
+    homeLink.onclick = function(e) { e.preventDefault(); showPanel(mainContent); };
+    searchLink.onclick = function(e) { e.preventDefault(); showPanel(searchPanel); };
+    adminLink.onclick = function(e) { e.preventDefault(); showPanel(adminSigninPanel); };
+
+    // Discord login
+    const discordBtn = document.getElementById('discord-login-btn-home');
+    if (discordBtn) {
+        discordBtn.onclick = function() {
+            window.location.href = '/api/auth/discord';
+        };
+    }
+
+    // Auto-search after Discord login
     const params = new URLSearchParams(window.location.search);
     const userId = params.get('userId');
     if (userId) {
+        showPanel(searchPanel);
         document.getElementById('search-query').value = userId;
         document.getElementById('search-form').dispatchEvent(new Event('submit'));
     }
 
-    // --- Admin sign in ---
+    // Admin sign in
     const adminSignInForm = document.getElementById('admin-signin-form');
-    const adminPanel = document.getElementById('admin-panel');
-    const adminSigninPanel = document.getElementById('admin-signin-panel');
     if (adminSignInForm) {
         adminSignInForm.onsubmit = async function(e) {
             e.preventDefault();
@@ -22,16 +50,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             const data = await res.json();
             if (data.success) {
-                adminPanel.style.display = '';
-                adminSigninPanel.style.display = 'none';
-                document.getElementById('admin-warning').style.display = '';
+                showPanel(adminPanel);
             } else {
                 document.getElementById('admin-signin-message').textContent = data.error || 'Login failed';
             }
         };
     }
 
-    // --- Search ---
+    // Search logic
     const searchForm = document.getElementById('search-form');
     const searchResults = document.getElementById('search-results');
     if (searchForm) {
