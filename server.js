@@ -176,23 +176,9 @@ app.get('/api/admin/logs', (req, res) => {
     res.json(readAdminLogs());
 });
 
-// Delete a note by index, with reason
-app.post('/api/users/delete-note', (req, res) => {
-    const { userId, noteIndex, reason } = req.body;
-    if (!userId || typeof noteIndex !== 'number') return res.status(400).json({ error: 'Missing userId or noteIndex' });
-    const data = readData();
-    const user = data.find(u => u.userId === userId);
-    if (!user || !Array.isArray(user.notes) || !user.notes[noteIndex]) return res.status(404).json({ error: 'Note not found' });
-    user.notes.splice(noteIndex, 1);
-    writeData(data);
-    // Optionally log the reason for deletion
-    res.json({ success: true });
-});
-
-// Edit a note by index
+// Edit note
 app.post('/api/users/edit-note', (req, res) => {
     const { userId, noteIndex, newNote } = req.body;
-    if (!userId || typeof noteIndex !== 'number' || typeof newNote !== 'string') return res.status(400).json({ error: 'Missing data' });
     const data = readData();
     const user = data.find(u => u.userId === userId);
     if (!user || !Array.isArray(user.notes) || !user.notes[noteIndex]) return res.status(404).json({ error: 'Note not found' });
@@ -201,29 +187,36 @@ app.post('/api/users/edit-note', (req, res) => {
     res.json({ success: true });
 });
 
-// Delete an application entry by index, with reason
-app.post('/api/users/delete-app', (req, res) => {
-    const { userId, appIndex, reason } = req.body;
-    if (!userId || typeof appIndex !== 'number') return res.status(400).json({ error: 'Missing userId or appIndex' });
+// Delete note
+app.post('/api/users/delete-note', (req, res) => {
+    const { userId, noteIndex } = req.body;
     const data = readData();
     const user = data.find(u => u.userId === userId);
-    if (!user || !Array.isArray(user.applications) || !user.applications[appIndex]) return res.status(404).json({ error: 'Application not found' });
-    user.applications.splice(appIndex, 1);
+    if (!user || !Array.isArray(user.notes) || !user.notes[noteIndex]) return res.status(404).json({ error: 'Note not found' });
+    user.notes.splice(noteIndex, 1);
     writeData(data);
-    // Optionally log the reason for deletion
     res.json({ success: true });
 });
 
-// Edit an application entry by index
+// Edit application
 app.post('/api/users/edit-app', (req, res) => {
     const { userId, appIndex, newStatus, newReason } = req.body;
-    if (!userId || typeof appIndex !== 'number' || typeof newStatus !== 'string' || typeof newReason !== 'string')
-        return res.status(400).json({ error: 'Missing data' });
     const data = readData();
     const user = data.find(u => u.userId === userId);
     if (!user || !Array.isArray(user.applications) || !user.applications[appIndex]) return res.status(404).json({ error: 'Application not found' });
     user.applications[appIndex].status = newStatus;
     user.applications[appIndex].reason = newReason;
+    writeData(data);
+    res.json({ success: true });
+});
+
+// Delete application
+app.post('/api/users/delete-app', (req, res) => {
+    const { userId, appIndex } = req.body;
+    const data = readData();
+    const user = data.find(u => u.userId === userId);
+    if (!user || !Array.isArray(user.applications) || !user.applications[appIndex]) return res.status(404).json({ error: 'Application not found' });
+    user.applications.splice(appIndex, 1);
     writeData(data);
     res.json({ success: true });
 });

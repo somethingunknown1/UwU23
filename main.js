@@ -139,4 +139,133 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `).join('');
     };
+
+    // Helper to fetch user by username or userId
+    async function fetchUser(username, userId) {
+        const q = userId || username;
+        const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
+        const users = await res.json();
+        return users && users.length ? users[0] : null;
+    }
+
+    // Render notes and applications with edit/delete
+    function renderAdminUser(user) {
+        const notesDiv = document.getElementById('admin-notes-list');
+        const appsDiv = document.getElementById('admin-apps-list');
+        // Notes
+        notesDiv.innerHTML = (user.notes || []).map((note, i) => `
+            <li>
+                <span>${note}</span>
+                <button type="button" onclick="editAdminNote(${i})">Edit</button>
+                <button type="button" onclick="deleteAdminNote(${i})">Delete</button>
+            </li>
+        `).join('');
+        // Applications
+        appsDiv.innerHTML = (user.applications || []).map((app, i) => `
+            <li>
+                <span><b>${app.status ? app.status.toUpperCase() : ''}</b> - ${app.reason || ''} ${app.date ? '(' + new Date(app.date).toLocaleString() + ')' : ''}</span>
+                <button type="button" onclick="editAdminApp(${i})">Edit</button>
+                <button type="button" onclick="deleteAdminApp(${i})">Delete</button>
+            </li>
+        `).join('');
+    }
+
+    // Load user and render in admin panel
+    async function loadAdminUser() {
+        const username = document.getElementById('admin-username').value.trim();
+        const userId = document.getElementById('admin-userid').value.trim();
+        if (!username && !userId) return;
+        const user = await fetchUser(username, userId);
+        if (user) {
+            document.getElementById('admin-notes').value = Array.isArray(user.notes) ? user.notes.join(', ') : (user.notes || '');
+            renderAdminUser(user);
+            window._adminUser = user; // Save for edit/delete
+        } else {
+            document.getElementById('admin-notes').value = '';
+            document.getElementById('admin-notes-list').innerHTML = '';
+            document.getElementById('admin-apps-list').innerHTML = '';
+            window._adminUser = null;
+        }
+    }
+
+    // Edit note
+    window.editAdminNote = async function(idx) {
+        const user = window._adminUser;
+        const newNote = prompt("Edit note:", user.notes[idx]);
+        if (newNote === null) return;
+        const res = await fetch('/api/users/edit-note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.userId, noteIndex: idx, newNote })
+        });
+        if (res.ok) loadAdminUser();
+    };
+
+    // Delete note
+    window.deleteAdminNote = async function(idx) {
+        const user = window._adminUser;
+        if (!confirm("Delete this note?")) return;
+        const res = await fetch('/api/users/delete-note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.userId, noteIndex: idx, reason: "Admin deleted" })
+        });
+        if (res.ok) loadAdminUser();
+    };
+
+    // Edit application
+    window.editAdminApp = async function(idx) {
+        const user = window._adminUser;
+        const app = user.applications[idx];
+        const newStatus = prompt("Edit status (Pass/Fail):", app.status);
+        if (newStatus === null) return;
+        const newReason = prompt("Edit reason:", app.reason);
+        if (newReason === null) return;
+        const res = await fetch('/api/users/edit-app', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.userId, appIndex: idx, newStatus, newReason })
+        });
+        if (res.ok) loadAdminUser();
+    };
+
+    // Delete application
+    window.deleteAdminApp = async function(idx) {
+        const user = window._adminUser;
+        if (!confirm("Delete this application entry?")) return;
+        const res = await fetch('/api/users/delete-app', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.userId, appIndex: idx, reason: "Admin deleted" })
+        });
+        if (res.ok) loadAdminUser();
+    };
+
+    // Load user data on blur
+    document.getElementById('admin-username').addEventListener('blur', loadAdminUser);
+    document.getElementById('admin-userid').addEventListener('blur', loadAdminUser);
+
+    // Admin form submit: always saves changes
+    document.getElementById('admin-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const username = document.getElementById('admin-username').value;
+        const userId = document.getElementById('admin-userid').value;
+        const notes = document.getElementById('admin-notes').value.split(',').map(n => n.trim()).filter(Boolean);
+        const appStatus = document.getElementById('admin-app-status').value;
+        const appReason = document.getElementById('admin-app-reason').value;
+        const res = await fetch('/api/users', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username,
+                userId,
+                notes,
+                appStatus,
+                appReason
+            })
+        });
+        if (res.ok) loadAdminUser();
+        document.getElementById('admin-message').textContent = res.ok ? 'User saved!' : 'Error saving user';
+        document.getElementById('admin-form').reset();
+    };
 });
