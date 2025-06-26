@@ -118,7 +118,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
             client_secret: 'Yx8sPXybWUp4GMfUCqLfUtB2F2Sc6QYa',
             grant_type: 'authorization_code',
             code,
-            redirect_uri: 'http://localhost:3000/api/auth/discord/callback',
+            redirect_uri: 'https://uwu23-production.up.railway.app/api/auth/discord/callback',
             scope: 'identify guilds.members.read'
         }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
 
