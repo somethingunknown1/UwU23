@@ -2,6 +2,7 @@ require('dotenv').config(); // Load environment variables
 
 const express = require('express');
 const session = require('express-session');
+const pgSession = require('connect-pg-simple')(session);
 const bodyParser = require('body-parser');
 const pg = require('pg');
 const cors = require('cors');
@@ -19,9 +20,14 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static('.'));
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'changeme',
-    resave: false,
-    saveUninitialized: false
+  store: new pgSession({
+    pool: pool, // your existing pg Pool
+    tableName: 'session'
+  }),
+  secret: process.env.SESSION_SECRET || 'changeme',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { maxAge: 30 * 24 * 60 * 60 * 1000 } // 30 days
 }));
 
 // --- Discord OAuth endpoints (simplified) ---
