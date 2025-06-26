@@ -5,106 +5,175 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cursed Layers Website</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background: #3ec6fa;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        nav {
+            background: #2976e2;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1em 0.5em;
+            gap: 2em;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 0 1em;
+            font-size: 1.1em;
+            transition: text-decoration 0.2s;
+        }
+        nav a:hover, nav a.active {
+            text-decoration: underline;
+        }
+        #discord-login-btn {
+            margin-left: 1em;
+            background: #fff;
+            color: #2976e2;
+            border: none;
+            padding: 0.4em 1em;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        #discord-login-btn:hover {
+            background: #e3eaff;
+        }
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 80vh;
+            margin-top: 3em;
+        }
+        .center-card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+            padding: 2.5em 2em;
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+        .center-card h1 {
+            color: #2976e2;
+            margin-bottom: 0.5em;
+        }
+        @media (max-width: 600px) {
+            .center-card {
+                padding: 1.2em 0.5em;
+            }
+            nav {
+                flex-direction: column;
+                gap: 0.5em;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="admin-warning" style="display:none; background: #222; color: #fff; padding: 0.75em 1em; text-align: center; font-size: 1rem;">
-        Make sure to sign in with Discord too or it may not work.
-    </div>
-    <nav style="display: flex; justify-content: space-between; align-items: center; background: #1976d2; color: #fff; padding: 1em;">
-        <div>
-            <a href="index.html" style="color: #fff;">Home</a>
-            <a href="#" id="search-link" style="color: #fff;">Search</a>
-            <a href="#" id="admin-link" style="color: #fff; display:none;">Admin Panel</a>
-        </div>
-        <button id="admin-signin-btn" style="background: #fff; color: #1976d2; border: none; padding: 0.5em 1em; border-radius: 4px; cursor: pointer;">Admin Sign In</button>
+    <nav>
+        <a href="index.html" id="nav-home" class="active">Home</a>
+        <a href="#" id="search-link">Profile Lookup</a>
+        <a href="#" id="admin-link" style="display:none;">Admin</a>
+        <button id="discord-login-btn" type="button" aria-label="Login with Discord">Login with Discord</button>
     </nav>
     <main>
-        <div class="container" id="main-content">
-            <h1>Hello, welcome to Cursed Layers website!</h1>
+        <div class="center-card" id="main-content">
+            <h1>Welcome to Cursed Layers!</h1>
             <p>
-                Here you can view your application results, see why you failed, and check any notes your account may have.<br>
+                View your application results, see why you failed, and check any notes your account may have.<br>
                 If you find any bugs, notify <strong>cursedradiodemon</strong> so I can fix them.
             </p>
-            <div id="discord-login-home" style="margin-top:2em;">
-                <button id="discord-login-btn-home" type="button">Login with Discord</button>
-            </div>
-        </div>
-        <!-- Admin Sign In Panel (hidden by default) -->
-        <div class="container" id="admin-signin-panel" style="display:none;">
-            <h2>Admin Sign In</h2>
-            <form id="admin-signin-form">
-                <input type="password" id="admin-signin-password" placeholder="Enter Admin Password" required />
-                <button type="submit">Sign In</button>
-            </form>
-            <div id="admin-signin-message"></div>
-        </div>
-        <!-- Admin Panel (hidden by default) -->
-        <div class="container" id="admin-panel" style="display:none;">
-            <h2>Admin Panel</h2>
-            <div>Signed in as: <span id="admin-username-display"></span></div>
-            <form id="admin-form" style="margin-top:2em;">
-                <label for="admin-username">Discord Username</label>
-                <input type="text" id="admin-username" placeholder="Discord Username" required />
-
-                <label for="admin-userid">Discord User ID</label>
-                <input type="text" id="admin-userid" placeholder="Discord User ID" required />
-
-                <label for="admin-notes">Notes</label>
-                <textarea id="admin-notes" placeholder="Notes (comma separated)"></textarea>
-
-                <label for="admin-app-status">Pass/Fail</label>
-                <input type="text" id="admin-app-status" placeholder="Pass/Fail" />
-
-                <label for="admin-app-reason">Reason</label>
-                <input type="text" id="admin-app-reason" placeholder="Reason" />
-
-                <button type="submit">Add/Update User</button>
-            </form>
-            <div id="admin-message"></div>
         </div>
         <!-- Search Panel (hidden by default) -->
-        <div class="container" id="search-panel" style="display:none;">
-            <h2>Search User</h2>
+        <div class="center-card" id="search-panel" style="display:none;">
+            <h2>Profile Lookup</h2>
             <form id="search-form">
-                <input type="text" id="search-query" placeholder="Enter Username or User ID" required />
+                <input type="text" id="search-query" placeholder="Enter Username or User ID" required style="width:90%;padding:0.5em;margin-bottom:1em;">
                 <button type="submit">Search</button>
             </form>
             <div id="search-results"></div>
         </div>
+        <!-- Admin Panel (hidden by default) -->
+        <div class="center-card" id="admin-panel" style="display:none;">
+            <h2>Admin Panel</h2>
+            <!-- Admin content goes here -->
+            <p>Welcome, admin! Here you can manage users, view logs, etc.</p>
+        </div>
     </main>
-    <script src="main.js"></script>
     <script>
-    // Add Discord login from home page
-    document.addEventListener('DOMContentLoaded', function() {
-        const btn = document.getElementById('discord-login-btn-home');
-        if (btn) {
-            btn.onclick = function() {
-                window.location.href = '/api/auth/discord';
-            };
+    // Discord login button
+    document.getElementById('discord-login-btn').onclick = function() {
+        window.location.href = '/api/auth/discord';
+    };
+
+    // Navigation logic
+    document.getElementById('nav-home').onclick = function(e) {
+        e.preventDefault();
+        document.getElementById('main-content').style.display = '';
+        document.getElementById('search-panel').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'none';
+        this.classList.add('active');
+        document.getElementById('search-link').classList.remove('active');
+        document.getElementById('admin-link').classList.remove('active');
+    };
+    document.getElementById('search-link').onclick = function(e) {
+        e.preventDefault();
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('search-panel').style.display = '';
+        document.getElementById('admin-panel').style.display = 'none';
+        this.classList.add('active');
+        document.getElementById('nav-home').classList.remove('active');
+        document.getElementById('admin-link').classList.remove('active');
+    };
+    document.getElementById('admin-link').onclick = function(e) {
+        e.preventDefault();
+        document.getElementById('main-content').style.display = 'none';
+        document.getElementById('search-panel').style.display = 'none';
+        document.getElementById('admin-panel').style.display = '';
+        this.classList.add('active');
+        document.getElementById('nav-home').classList.remove('active');
+        document.getElementById('search-link').classList.remove('active');
+    };
+
+    // Example: Show admin tab after successful admin login
+    function showAdminTab() {
+        document.getElementById('admin-link').style.display = '';
+    }
+
+    // Call showAdminTab() after admin login is successful
+    // showAdminTab();
+
+    // Profile lookup logic (example, adjust endpoint as needed)
+    document.getElementById('search-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const query = document.getElementById('search-query').value.trim();
+        const resultsDiv = document.getElementById('search-results');
+        if (!query) return;
+        resultsDiv.textContent = 'Searching...';
+        try {
+            const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+            if (!res.ok) throw new Error('User not found');
+            const user = await res.json();
+            resultsDiv.innerHTML = `
+                <div style="margin-top:1em;text-align:left;">
+                    <strong>Username:</strong> ${user.username}<br>
+                    <strong>User ID:</strong> ${user.id}<br>
+                    <strong>Notes:</strong> ${user.notes ? user.notes.join(', ') : 'None'}
+                </div>
+            `;
+        } catch {
+            resultsDiv.textContent = 'User not found.';
         }
-        // Show admin warning after admin sign in
-        const adminSignInForm = document.getElementById('admin-signin-form');
-        if (adminSignInForm) {
-            adminSignInForm.addEventListener('submit', function(e) {
-                setTimeout(function() {
-                    document.getElementById('admin-warning').style.display = '';
-                }, 100); // Show after sign in
-            });
-        }
-        // Show admin panel
-        document.getElementById('admin-link').onclick = function() {
-          document.getElementById('main-content').style.display = 'none';
-          document.getElementById('search-panel').style.display = 'none';
-          document.getElementById('admin-panel').style.display = '';
-          document.getElementById('admin-link').style.display = '';
-        };
-        // Show search panel
-        document.getElementById('search-link').onclick = function() {
-          document.getElementById('main-content').style.display = 'none';
-          document.getElementById('admin-panel').style.display = 'none';
-          document.getElementById('search-panel').style.display = '';
-        };
-    });
+    };
     </script>
 </body>
 </html>

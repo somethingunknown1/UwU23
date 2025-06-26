@@ -46,12 +46,14 @@ document.addEventListener('DOMContentLoaded', async function() {
     const homeLink = document.querySelector('nav a[href="index.html"]');
     if (homeLink) homeLink.onclick = () => { showPanel('main'); return false; };
 
-    // Discord login button
-    if (discordLoginBtn) {
-        discordLoginBtn.onclick = () => {
-            window.location.href = '/api/auth/discord';
+    document.addEventListener('DOMContentLoaded', function() {
+      const discordBtn = document.getElementById('discord-login-btn') || document.getElementById('discord-login-btn-home');
+      if (discordBtn) {
+        discordBtn.onclick = function() {
+          window.location.href = '/api/auth/discord';
         };
-    }
+      }
+    });
 
     // Check if user is logged in (fetch from backend)
     let user = null;
@@ -288,7 +290,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     addBanLog(1, 'AdminName', 'Ban', { reason: 'Rule violation' });
 
     const adminTab = document.getElementById('admin-tab');
-    const adminPanel = document.getElementById('admin-panel');
 
     if (adminTab && adminPanel) {
       adminTab.onclick = () => {
