@@ -310,7 +310,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Optionally, add navigation back to main/search
-    const navHome = document.getElementById('nav-home');
+    // Use the already declared navHome variable above for navigation logic
     if (navHome) {
       navHome.onclick = () => {
         adminPanel.style.display = 'none';
@@ -375,18 +375,5 @@ document.addEventListener('DOMContentLoaded', async function() {
                 : '<div>No bans found.</div>');
         };
     }
-const mainBtn = document.getElementById('main-btn');
-if (mainBtn) mainBtn.onclick = () => showPanel('main');
-
-const profileBtn = document.getElementById('profile-btn');
-if (profileBtn) profileBtn.onclick = () => showPanel('profile');
-
-const applicationsBtn = document.getElementById('applications-btn');
-if (applicationsBtn) applicationsBtn.onclick = () => showPanel('applications');
-
-const bansBtn = document.getElementById('bans-btn');
-if (bansBtn) bansBtn.onclick = () => showPanel('bans');
-
-const adminBtn = document.getElementById('admin-btn');
-if (adminBtn) adminBtn.onclick = () => showPanel('admin');
+/* Duplicate navigation button declarations removed to prevent redeclaration errors. */
 });
