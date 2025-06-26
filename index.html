@@ -195,10 +195,14 @@
         <div class="center-card" id="modal-panel" style="display:none;position:fixed;top:10vh;left:50%;transform:translateX(-50%);z-index:200;max-width:95vw;"></div>
     </main>
     <script>
-    // --- CONFIG ---
-    const ADMIN_PASSWORD = 'your_admin_password'; // <-- Set your admin password here
-
     // --- Discord login logic ---
+    async function checkDiscordLogin() {
+        const res = await fetch('/api/me');
+        if (res.ok) {
+            const user = await res.json();
+            onDiscordLogin(user);
+        }
+    }
     function onDiscordLogin(user) {
         document.getElementById('discord-login-btn').style.display = 'none';
         const profileBtn = document.getElementById('profile-menu-btn');
@@ -209,31 +213,48 @@
             const dropdown = document.getElementById('profile-dropdown');
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
         };
-        // Hide dropdown when clicking outside
         document.addEventListener('click', function(e) {
             if (!profileBtn.contains(e.target) && !document.getElementById('profile-dropdown').contains(e.target)) {
                 document.getElementById('profile-dropdown').style.display = 'none';
             }
         });
     }
-
-    // Simulate Discord login (replace with real fetch/session logic)
-    // Example: fetch('/api/me').then(res => res.json()).then(user => onDiscordLogin(user));
-    // For demo:
-    // onDiscordLogin({ username: "DemoUser", avatar: "https://cdn.discordapp.com/embed/avatars/0.png" });
+    checkDiscordLogin();
 
     // --- Profile dropdown actions ---
-    document.getElementById('view-profile-btn').onclick = function() {
+    document.getElementById('view-profile-btn').onclick = async function() {
         showModal('Profile', '<div>Loading profile...</div>');
-        // Fetch and display profile info here
+        const res = await fetch('/api/me/profile');
+        if (res.ok) {
+            const data = await res.json();
+            showModal('Profile', `
+                <div><strong>Username:</strong> ${data.username}</div>
+                <div><strong>User ID:</strong> ${data.id}</div>
+                <div><strong>Notes:</strong> ${data.notes?.join(', ') || 'None'}</div>
+                <div><strong>Banned:</strong> ${data.banned ? 'Yes' : 'No'}</div>
+            `);
+        }
     };
-    document.getElementById('view-bans-btn').onclick = function() {
+    document.getElementById('view-bans-btn').onclick = async function() {
         showModal('Bans', '<div>Loading bans...</div>');
-        // Fetch and display ban info here
+        const res = await fetch('/api/me/bans');
+        if (res.ok) {
+            const data = await res.json();
+            showModal('Bans', `
+                <div><strong>Banned:</strong> ${data.banned ? 'Yes' : 'No'}</div>
+                <div><strong>Reason:</strong> ${data.reason || 'N/A'}</div>
+            `);
+        }
     };
-    document.getElementById('view-applications-btn').onclick = function() {
+    document.getElementById('view-applications-btn').onclick = async function() {
         showModal('Applications', '<div>Loading applications...</div>');
-        // Fetch and display applications here
+        const res = await fetch('/api/me/applications');
+        if (res.ok) {
+            const apps = await res.json();
+            showModal('Applications', apps.length
+                ? apps.map(a => `<div><strong>Status:</strong> ${a.status}<br><strong>Reason:</strong> ${a.reason}</div>`).join('<hr>')
+                : '<div>No applications found.</div>');
+        }
     };
 
     // --- Modal helper ---
@@ -256,11 +277,13 @@
     };
     document.getElementById('admin-link').onclick = function(e) {
         e.preventDefault();
-        if (window.isAdmin) {
-            showPanel('admin');
-        } else {
-            showPanel('admin-signin');
-        }
+        fetch('/api/admin/session').then(res => res.json()).then(data => {
+            if (data.isAdmin) {
+                showPanel('admin');
+            } else {
+                showPanel('admin-signin');
+            }
+        });
         setActiveNav(this);
     };
 
@@ -300,11 +323,15 @@
     };
 
     // --- Admin sign-in logic ---
-    document.getElementById('admin-signin-form').onsubmit = function(e) {
+    document.getElementById('admin-signin-form').onsubmit = async function(e) {
         e.preventDefault();
         const password = document.getElementById('admin-password').value;
-        if (password === ADMIN_PASSWORD) {
-            window.isAdmin = true;
+        const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password })
+        });
+        if (res.ok) {
             showPanel('admin');
         } else {
             document.getElementById('admin-signin-error').textContent = 'Incorrect password.';
@@ -351,9 +378,15 @@
             </form>
         `);
     };
-    document.getElementById('view-logs-btn').onclick = function() {
+    document.getElementById('view-logs-btn').onclick = async function() {
         showModal('Logs', '<div>Loading logs...</div>');
-        // TODO: Fetch and display logs
+        const res = await fetch('/api/admin/logs');
+        if (res.ok) {
+            const logs = await res.json();
+            showModal('Logs', logs.length
+                ? logs.map(l => `<div><strong>${l.timestamp}</strong> - ${l.action} by ${l.admin}<br>${JSON.stringify(l.changes)}</div>`).join('<hr>')
+                : '<div>No logs found.</div>');
+        }
     };
 
     // --- Discord login button ---
