@@ -286,11 +286,11 @@ app.post('/api/users/application', async (req, res) => {
   });
   await pool.query(
     `UPDATE users SET applications = $1 WHERE user_id = $2`,
-    [JSON.stringify(applications), userId]
+    [applications, userId] // <-- use applications array directly
   );
   await pool.query(
     `INSERT INTO logs (user_id, action, details, admin)
-     VALUES ($1, 'application', $2, $3)",
+     VALUES ($1, 'application', $2, $3)`,
     [userId, `Application: ${status}, Improve: ${improve}`, req.session?.user?.username || 'system']
   );
   res.json({ success: true });
