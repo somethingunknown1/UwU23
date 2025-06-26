@@ -82,7 +82,7 @@
     <nav>
         <a href="index.html" id="nav-home" class="active">Home</a>
         <a href="#" id="search-link">Profile Lookup</a>
-        <a href="#" id="admin-link" style="display:none;">Admin</a>
+        <a href="#" id="admin-link">Admin</a>
         <button id="discord-login-btn" type="button" aria-label="Login with Discord">Login with Discord</button>
     </nav>
     <main>
@@ -107,6 +107,15 @@
             <h2>Admin Panel</h2>
             <!-- Admin content goes here -->
             <p>Welcome, admin! Here you can manage users, view logs, etc.</p>
+        </div>
+        <!-- Admin Sign-in Panel (hidden by default) -->
+        <div class="center-card" id="admin-signin-panel" style="display:none;">
+            <h2>Admin Login</h2>
+            <form id="admin-signin-form">
+                <input type="password" id="admin-password" placeholder="Enter admin password" required style="width:90%;padding:0.5em;margin-bottom:1em;">
+                <button type="submit">Sign In</button>
+            </form>
+            <div id="admin-signin-error" style="color:red;margin-top:1em;"></div>
         </div>
     </main>
     <script>
@@ -174,6 +183,49 @@
             resultsDiv.textContent = 'User not found.';
         }
     };
+
+    // Admin sign-in logic (example, adjust endpoint as needed)
+    const adminTab = document.getElementById('admin-link');
+const adminPanel = document.getElementById('admin-panel');
+const adminSigninPanel = document.getElementById('admin-signin-panel');
+const adminSigninForm = document.getElementById('admin-signin-form');
+const adminSigninError = document.getElementById('admin-signin-error');
+const mainContent = document.getElementById('main-content');
+const searchPanel = document.getElementById('search-panel');
+
+let isAdmin = false;
+
+// Show admin sign-in if not logged in, else show admin panel
+adminTab.onclick = function(e) {
+    e.preventDefault();
+    mainContent.style.display = 'none';
+    searchPanel.style.display = 'none';
+    if (isAdmin) {
+        adminPanel.style.display = '';
+        adminSigninPanel.style.display = 'none';
+    } else {
+        adminPanel.style.display = 'none';
+        adminSigninPanel.style.display = '';
+        adminSigninError.textContent = '';
+    }
+    adminTab.classList.add('active');
+    document.getElementById('nav-home').classList.remove('active');
+    document.getElementById('search-link').classList.remove('active');
+};
+
+// Handle admin sign-in
+adminSigninForm.onsubmit = function(e) {
+    e.preventDefault();
+    const password = document.getElementById('admin-password').value;
+    // Replace 'your_admin_password' with your actual password
+    if (password === 'your_admin_password') {
+        isAdmin = true;
+        adminSigninPanel.style.display = 'none';
+        adminPanel.style.display = '';
+    } else {
+        adminSigninError.textContent = 'Incorrect password.';
+    }
+};
     </script>
 </body>
 </html>
