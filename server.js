@@ -7,6 +7,11 @@ const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const session = require('express-session');
 const axios = require('axios');
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 const app = express();
 const PORT = 3000;
 const DATA_FILE = './users.json';
@@ -39,45 +44,20 @@ function writeAdminLogs(logs) {
 }
 
 // Admin: Add or update user (append application results and merge notes)
-app.post('/api/users', (req, res) => {
-    const { username, userId, notes, appStatus, appReason } = req.body;
-    if (!username || !userId) return res.status(400).json({ error: 'Missing username or userId' });
-
-    const data = readData();
-    let user = data.find(u => u.userId === userId);
-
-    if (user) {
-        // Merge notes (combine old and new, remove duplicates)
-        let newNotes = Array.isArray(notes) ? notes : (notes ? [notes] : []);
-        let existingNotes = Array.isArray(user.notes) ? user.notes : (user.notes ? [user.notes] : []);
-        user.notes = Array.from(new Set([...existingNotes, ...newNotes])).filter(n => n);
-
-        // Append new application result
-        if (!user.applications) user.applications = [];
-        if (appStatus || appReason) {
-            user.applications.push({
-                status: appStatus,
-                reason: appReason,
-                date: new Date().toISOString()
-            });
-        }
-    } else {
-        // Create new user
-        user = {
-            username,
-            userId,
-            notes: Array.isArray(notes) ? notes : (notes ? [notes] : []),
-            applications: (appStatus || appReason) ? [{
-                status: appStatus,
-                reason: appReason,
-                date: new Date().toISOString()
-            }] : []
-        };
-        data.push(user);
-    }
-
-    writeData(data);
-    res.json({ success: true, user });
+app.post('/api/users', async (req, res) => {
+  const { username, userId, notes } = req.body;
+  await pool.query(
+    `INSERT INTO users (username, user_id, notes)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (user_id) DO UPDATE SET username = $1, notes = $3`,
+    [username, userId, notes]
+  );
+  await pool.query(
+    `INSERT INTO logs (user_id, action, details, admin)
+     VALUES ($1, 'profile_update', $2, $3)`,
+    [userId, `Updated profile for ${username}`, req.session?.user?.username || 'system']
+  );
+  res.json({ success: true });
 });
 
 // Admin login endpoint
@@ -92,12 +72,14 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 // User search endpoint
-app.get('/api/users/search', (req, res) => {
-    const { q } = req.query;
-    if (!q) return res.status(400).json([]);
-    const data = readData();
-    const results = data.filter(u => u.userId === q || (u.username && u.username.toLowerCase() === q.toLowerCase()));
-    res.json(results);
+app.get('/api/users/search', async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.status(400).json([]);
+  const result = await pool.query(
+    'SELECT * FROM users WHERE user_id = $1 OR LOWER(username) = LOWER($1) LIMIT 1',
+    [q]
+  );
+  res.json(result.rows);
 });
 
 // Admin: Get all users (for admin panel)
@@ -186,49 +168,137 @@ app.get('/api/admin/logs', (req, res) => {
     res.json(readAdminLogs());
 });
 
-// Edit note
-app.post('/api/users/edit-note', (req, res) => {
-    const { userId, noteIndex, newNote } = req.body;
-    const data = readData();
-    const user = data.find(u => u.userId === userId);
-    if (!user || !Array.isArray(user.notes) || !user.notes[noteIndex]) return res.status(404).json({ error: 'Note not found' });
-    user.notes[noteIndex] = newNote;
-    writeData(data);
-    res.json({ success: true });
+// Edit Note
+app.post('/api/users/edit-note', async (req, res) => {
+  const { userId, noteIndex, newNote } = req.body;
+  if (!userId || typeof noteIndex !== 'number' || typeof newNote !== 'string') {
+    return res.status(400).json({ error: 'Missing data' });
+  }
+  const userResult = await pool.query('SELECT notes FROM users WHERE user_id = $1', [userId]);
+  let notes = userResult.rows[0]?.notes || [];
+  if (!notes[noteIndex]) return res.status(404).json({ error: 'Note not found' });
+  notes[noteIndex] = newNote;
+  await pool.query('UPDATE users SET notes = $1 WHERE user_id = $2', [notes, userId]);
+  await pool.query(
+    `INSERT INTO logs (user_id, action, details, admin)
+     VALUES ($1, 'edit_note', $2, $3)`,
+    [userId, `Edited note #${noteIndex + 1}`, req.session?.user?.username || 'system']
+  );
+  res.json({ success: true });
 });
 
-// Delete note
-app.post('/api/users/delete-note', (req, res) => {
-    const { userId, noteIndex } = req.body;
-    const data = readData();
-    const user = data.find(u => u.userId === userId);
-    if (!user || !Array.isArray(user.notes) || !user.notes[noteIndex]) return res.status(404).json({ error: 'Note not found' });
-    user.notes.splice(noteIndex, 1);
-    writeData(data);
-    res.json({ success: true });
+// Delete Note
+app.post('/api/users/delete-note', async (req, res) => {
+  const { userId, noteIndex, reason } = req.body;
+  if (!userId || typeof noteIndex !== 'number') {
+    return res.status(400).json({ error: 'Missing data' });
+  }
+  const userResult = await pool.query('SELECT notes FROM users WHERE user_id = $1', [userId]);
+  let notes = userResult.rows[0]?.notes || [];
+  if (!notes[noteIndex]) return res.status(404).json({ error: 'Note not found' });
+  const deletedNote = notes[noteIndex];
+  notes.splice(noteIndex, 1);
+  await pool.query('UPDATE users SET notes = $1 WHERE user_id = $2', [notes, userId]);
+  await pool.query(
+    `INSERT INTO logs (user_id, action, details, admin)
+     VALUES ($1, 'delete_note', $2, $3)`,
+    [userId, `Deleted note #${noteIndex + 1}: ${deletedNote}. Reason: ${reason || 'N/A'}`, req.session?.user?.username || 'system']
+  );
+  res.json({ success: true });
 });
 
-// Edit application
-app.post('/api/users/edit-app', (req, res) => {
-    const { userId, appIndex, newStatus, newReason } = req.body;
-    const data = readData();
-    const user = data.find(u => u.userId === userId);
-    if (!user || !Array.isArray(user.applications) || !user.applications[appIndex]) return res.status(404).json({ error: 'Application not found' });
-    user.applications[appIndex].status = newStatus;
-    user.applications[appIndex].reason = newReason;
-    writeData(data);
-    res.json({ success: true });
+// Edit Application
+app.post('/api/users/edit-app', async (req, res) => {
+  const { userId, appIndex, newStatus, newReason } = req.body;
+  if (!userId || typeof appIndex !== 'number' || typeof newStatus !== 'string' || typeof newReason !== 'string') {
+    return res.status(400).json({ error: 'Missing data' });
+  }
+  const userResult = await pool.query('SELECT applications FROM users WHERE user_id = $1', [userId]);
+  let applications = userResult.rows[0]?.applications || [];
+  if (!applications[appIndex]) return res.status(404).json({ error: 'Application not found' });
+  applications[appIndex].status = newStatus;
+  applications[appIndex].reason = newReason;
+  await pool.query('UPDATE users SET applications = $1 WHERE user_id = $2', [JSON.stringify(applications), userId]);
+  await pool.query(
+    `INSERT INTO logs (user_id, action, details, admin)
+     VALUES ($1, 'edit_application', $2, $3)`,
+    [userId, `Edited application #${appIndex + 1}`, req.session?.user?.username || 'system']
+  );
+  res.json({ success: true });
 });
 
-// Delete application
-app.post('/api/users/delete-app', (req, res) => {
-    const { userId, appIndex } = req.body;
-    const data = readData();
-    const user = data.find(u => u.userId === userId);
-    if (!user || !Array.isArray(user.applications) || !user.applications[appIndex]) return res.status(404).json({ error: 'Application not found' });
-    user.applications.splice(appIndex, 1);
-    writeData(data);
-    res.json({ success: true });
+// Delete Application
+app.post('/api/users/delete-app', async (req, res) => {
+  const { userId, appIndex, reason } = req.body;
+  if (!userId || typeof appIndex !== 'number') {
+    return res.status(400).json({ error: 'Missing data' });
+  }
+  const userResult = await pool.query('SELECT applications FROM users WHERE user_id = $1', [userId]);
+  let applications = userResult.rows[0]?.applications || [];
+  if (!applications[appIndex]) return res.status(404).json({ error: 'Application not found' });
+  const deletedApp = applications[appIndex];
+  applications.splice(appIndex, 1);
+  await pool.query('UPDATE users SET applications = $1 WHERE user_id = $2', [JSON.stringify(applications), userId]);
+  await pool.query(
+    `INSERT INTO logs (user_id, action, details, admin)
+     VALUES ($1, 'delete_application', $2, $3)`,
+    [userId, `Deleted application #${appIndex + 1}: ${JSON.stringify(deletedApp)}. Reason: ${reason || 'N/A'}`, req.session?.user?.username || 'system']
+  );
+  res.json({ success: true });
+});
+
+app.post('/api/users/ban', async (req, res) => {
+  const { username, userId, platform, reason } = req.body;
+  await pool.query(
+    `UPDATE users SET banned = TRUE, ban_reason = $1 WHERE user_id = $2`,
+    [reason, userId]
+  );
+  await pool.query(
+    `INSERT INTO logs (user_id, action, details, admin)
+     VALUES ($1, 'ban', $2, $3)`,
+    [userId, `Platform: ${platform}, Reason: ${reason}`, req.session?.user?.username || 'system']
+  );
+  res.json({ success: true });
+});
+
+app.post('/api/users/revoke-ban', async (req, res) => {
+  const { userId, reason } = req.body;
+  await pool.query(
+    `UPDATE users SET banned = FALSE, ban_reason = NULL WHERE user_id = $1`,
+    [userId]
+  );
+  await pool.query(
+    `INSERT INTO logs (user_id, action, details, admin)
+     VALUES ($1, 'ban_revoked', $2, $3)`,
+    [userId, `Ban revoked: ${reason}`, req.session?.user?.username || 'system']
+  );
+  res.json({ success: true });
+});
+
+app.post('/api/users/application', async (req, res) => {
+  const { username, userId, status, improve } = req.body;
+  const userResult = await pool.query('SELECT applications FROM users WHERE user_id = $1', [userId]);
+  let applications = userResult.rows[0]?.applications || [];
+  applications.push({
+    status,
+    reason: improve,
+    date: new Date().toISOString()
+  });
+  await pool.query(
+    `UPDATE users SET applications = $1 WHERE user_id = $2`,
+    [JSON.stringify(applications), userId]
+  );
+  await pool.query(
+    `INSERT INTO logs (user_id, action, details, admin)
+     VALUES ($1, 'application', $2, $3)",
+    [userId, `Application: ${status}, Improve: ${improve}`, req.session?.user?.username || 'system']
+  );
+  res.json({ success: true });
+});
+
+app.get('/api/logs', async (req, res) => {
+  const result = await pool.query('SELECT * FROM logs ORDER BY date DESC LIMIT 100');
+  res.json(result.rows);
 });
 
 app.listen(PORT, () => {
