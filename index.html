@@ -313,10 +313,28 @@
             resultsDiv.innerHTML = `
                 <div style="margin-top:1em;text-align:left;">
                     <strong>Username:</strong> ${user.username}<br>
-                    <strong>User ID:</strong> ${user.id}<br>
-                    <strong>Notes:</strong> ${user.notes ? user.notes.join(', ') : 'None'}
+                    <strong>User ID:</strong> ${user.user_id}<br>
+                    <strong>Notes:</strong> ${user.notes && user.notes.length ? user.notes.join(', ') : 'None'}<br>
+                    <strong>Banned:</strong> ${user.banned ? 'Yes' : 'No'}<br>
+                    <strong>Ban Reason:</strong> ${user.ban_reason || 'N/A'}<br>
+                    <button id="view-apps-btn">View Applications</button>
+                    <button id="view-bans-btn">View Bans</button>
                 </div>
             `;
+            document.getElementById('view-apps-btn').onclick = async function() {
+                const res = await fetch(`/api/users/${user.user_id}/applications`);
+                const apps = await res.json();
+                showModal('Applications', apps.length
+                    ? apps.map(a => `<div><strong>Status:</strong> ${a.status}<br><strong>Reason:</strong> ${a.reason}</div>`).join('<hr>')
+                    : '<div>No applications found.</div>');
+            };
+            document.getElementById('view-bans-btn').onclick = async function() {
+                const res = await fetch(`/api/users/${user.user_id}/bans`);
+                const bans = await res.json();
+                showModal('Bans', bans.length
+                    ? bans.map(b => `<div><strong>Admin:</strong> ${b.admin}<br><strong>Reason:</strong> ${b.changes?.reason || 'N/A'}</div>`).join('<hr>')
+                    : '<div>No bans found.</div>');
+            };
         } catch {
             resultsDiv.textContent = 'User not found.';
         }

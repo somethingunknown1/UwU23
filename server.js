@@ -85,10 +85,10 @@ app.get('/api/auth/discord/callback', async (req, res) => {
 
     // Upsert user in DB
     await pool.query(
-      `INSERT INTO users (user_id, username)
-       VALUES ($1, $2)
-       ON CONFLICT (user_id) DO UPDATE SET username = EXCLUDED.username`,
-      [user.id, user.username]
+      `INSERT INTO users (user_id, username, avatar)
+       VALUES ($1, $2, $3)
+       ON CONFLICT (user_id) DO UPDATE SET username = EXCLUDED.username, avatar = EXCLUDED.avatar`,
+      [user.id, user.username, `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`]
     );
 
     res.redirect('/');
@@ -144,6 +144,23 @@ app.get('/api/users/search', async (req, res) => {
   );
   if (!rows[0]) return res.status(404).json({ error: 'User not found' });
   res.json(rows[0]);
+});
+
+// Add endpoints for applications and bans by user_id:
+app.get('/api/users/:user_id/applications', async (req, res) => {
+  const { user_id } = req.params;
+  const { rows } = await pool.query(
+    'SELECT * FROM applications WHERE user_id = $1 ORDER BY date DESC', [user_id]
+  );
+  res.json(rows);
+});
+
+app.get('/api/users/:user_id/bans', async (req, res) => {
+  const { user_id } = req.params;
+  const { rows } = await pool.query(
+    'SELECT * FROM ban_logs WHERE user_id = $1 ORDER BY timestamp DESC', [user_id]
+  );
+  res.json(rows);
 });
 
 // --- Admin session check ---
