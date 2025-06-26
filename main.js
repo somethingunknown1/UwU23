@@ -1,20 +1,25 @@
 document.addEventListener('DOMContentLoaded', async function() {
+  // Panel references (put these near the top, after DOMContentLoaded)
+const mainContent = document.getElementById('main-content');
+const adminPanel = document.getElementById('admin-panel');
+const searchPanel = document.getElementById('search-panel');
+const adminSignInPanel = document.getElementById('admin-signin-panel');
+const logsPanel = document.getElementById('logs-panel');
+const profilePanel = document.getElementById('profile-panel');
+const applicationsPanel = document.getElementById('applications-panel');
+const bansPanel = document.getElementById('bans-panel');
+
     // UI elements
-    const mainContent = document.getElementById('main-content');
-    const adminPanel = document.getElementById('admin-panel');
-    const searchPanel = document.getElementById('search-panel');
     const adminLink = document.getElementById('admin-link');
     const searchLink = document.getElementById('search-link');
     const discordLoginDiv = document.getElementById('discord-login');
     const adminForm = document.getElementById('admin-form');
     const discordLoginBtn = document.getElementById('discord-login-btn');
     const adminSignInBtn = document.getElementById('admin-signin-btn');
-    const adminSignInPanel = document.getElementById('admin-signin-panel');
     const adminSignInForm = document.getElementById('admin-signin-form');
     const adminSignInMessage = document.getElementById('admin-signin-message');
     // Logs button and panel
     let logsBtn = document.getElementById('logs-btn');
-    let logsPanel = document.getElementById('logs-panel');
     if (!logsBtn) {
         logsBtn = document.createElement('button');
         logsBtn.id = 'logs-btn';
@@ -33,27 +38,28 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
 
     // Helper to show/hide panels
-    function showPanel(panel) {
-        mainContent.style.display = panel === 'main' ? '' : 'none';
-        adminPanel.style.display = panel === 'admin' ? '' : 'none';
-        searchPanel.style.display = panel === 'search' ? '' : 'none';
-        if (adminSignInPanel) adminSignInPanel.style.display = panel === 'admin-signin' ? '' : 'none';
-        logsPanel.style.display = panel === 'logs' ? '' : 'none';
-    }
+function showPanel(panel) {
+    if (mainContent) mainContent.style.display = panel === 'main' ? '' : 'none';
+    if (profilePanel) profilePanel.style.display = panel === 'profile' ? '' : 'none';
+    if (applicationsPanel) applicationsPanel.style.display = panel === 'applications' ? '' : 'none';
+    if (bansPanel) bansPanel.style.display = panel === 'bans' ? '' : 'none';
+    if (adminPanel) adminPanel.style.display = panel === 'admin' ? '' : 'none';
+    if (searchPanel) searchPanel.style.display = panel === 'search' ? '' : 'none';
+    if (adminSignInPanel) adminSignInPanel.style.display = panel === 'admin-signin' ? '' : 'none';
+    if (logsPanel) logsPanel.style.display = panel === 'logs' ? '' : 'none';
+}
 
     // Navigation
     if (searchLink) searchLink.onclick = () => { showPanel('search'); return false; };
     const homeLink = document.querySelector('nav a[href="index.html"]');
     if (homeLink) homeLink.onclick = () => { showPanel('main'); return false; };
 
-    document.addEventListener('DOMContentLoaded', function() {
-      const discordBtn = document.getElementById('discord-login-btn') || document.getElementById('discord-login-btn-home');
-      if (discordBtn) {
-        discordBtn.onclick = function() {
-          window.location.href = '/api/auth/discord';
-        };
-      }
-    });
+    const discordBtn = document.getElementById('discord-login-btn') || document.getElementById('discord-login-btn-home');
+    if (discordBtn) {
+      discordBtn.onclick = function() {
+        window.location.href = '/api/auth/discord';
+      };
+    }
 
     // Check if user is logged in (fetch from backend)
     let user = null;
@@ -366,4 +372,18 @@ document.addEventListener('DOMContentLoaded', async function() {
                 : '<div>No bans found.</div>');
         };
     }
+const mainBtn = document.getElementById('main-btn');
+if (mainBtn) mainBtn.onclick = () => showPanel('main');
+
+const profileBtn = document.getElementById('profile-btn');
+if (profileBtn) profileBtn.onclick = () => showPanel('profile');
+
+const applicationsBtn = document.getElementById('applications-btn');
+if (applicationsBtn) applicationsBtn.onclick = () => showPanel('applications');
+
+const bansBtn = document.getElementById('bans-btn');
+if (bansBtn) bansBtn.onclick = () => showPanel('bans');
+
+const adminBtn = document.getElementById('admin-btn');
+if (adminBtn) adminBtn.onclick = () => showPanel('admin');
 });

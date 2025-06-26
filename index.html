@@ -149,6 +149,10 @@
             <span id="profile-username"></span>
         </div>
         <a id="admin-panel-link" href="/admin" style="display:none;">Admin Panel</a>
+        <button id="profile-btn" type="button">Profile</button>
+        <button id="applications-btn" type="button">Applications</button>
+        <button id="bans-btn" type="button">Bans</button>
+        <button id="admin-btn" type="button">Admin</button>
     </nav>
     <main>
         <div class="center-card" id="main-content">
@@ -158,37 +162,11 @@
                 If you find any bugs, notify <strong>cursedradiodemon</strong> so I can fix them.
             </p>
         </div>
-        <!-- Search Panel (hidden by default) -->
-        <div class="center-card" id="search-panel" style="display:none;">
-            <h2>Profile Lookup</h2>
-            <form id="search-form">
-                <input type="text" id="search-query" placeholder="Enter Username or User ID" required style="width:90%;padding:0.5em;margin-bottom:1em;">
-                <button type="submit">Search</button>
-            </form>
-            <div id="search-results"></div>
-        </div>
-        <!-- Admin Panel (hidden by default) -->
-        <div class="center-card" id="admin-panel" style="display:none;">
-            <h2>Admin Panel</h2>
-            <div class="admin-btns">
-                <button id="edit-profile-btn">Edit a Profile</button>
-                <button id="add-application-btn">Add Application</button>
-                <button id="log-ban-btn">Log a Ban</button>
-                <button id="view-logs-btn">Logs</button>
-            </div>
-            <div id="admin-action-panel" style="margin-top:2em;"></div>
-        </div>
-        <!-- Admin Sign-in Panel (hidden by default) -->
-        <div class="center-card" id="admin-signin-panel" style="display:none;">
-            <h2>Admin Login</h2>
-            <form id="admin-signin-form">
-                <input type="password" id="admin-password" placeholder="Enter admin password" required style="width:90%;padding:0.5em;margin-bottom:1em;">
-                <button type="submit">Sign In</button>
-            </form>
-            <div id="admin-signin-error" style="color:red;margin-top:1em;"></div>
-        </div>
-        <!-- Modal for profile/applications/bans/logs -->
-        <div class="center-card" id="modal-panel" style="display:none;position:fixed;top:10vh;left:50%;transform:translateX(-50%);z-index:200;max-width:95vw;"></div>
+        <div class="center-card" id="profile-panel" style="display:none;">Profile content here</div>
+        <div class="center-card" id="applications-panel" style="display:none;">Applications content here</div>
+        <div class="center-card" id="bans-panel" style="display:none;">Bans content here</div>
+        <div class="center-card" id="admin-panel" style="display:none;">Admin panel content here</div>
+        <!-- ...other panels... -->
     </main>
     <script>
     // --- Discord login logic ---
@@ -283,17 +261,21 @@
         setActiveNav(this);
     };
 
-    function showPanel(panel) {
+    document.addEventListener('DOMContentLoaded', () => {
+      function showPanel(panel) {
         document.getElementById('main-content').style.display = panel === 'main' ? '' : 'none';
-        document.getElementById('search-panel').style.display = panel === 'search' ? '' : 'none';
+        document.getElementById('profile-panel').style.display = panel === 'profile' ? '' : 'none';
+        document.getElementById('applications-panel').style.display = panel === 'applications' ? '' : 'none';
+        document.getElementById('bans-panel').style.display = panel === 'bans' ? '' : 'none';
         document.getElementById('admin-panel').style.display = panel === 'admin' ? '' : 'none';
-        document.getElementById('admin-signin-panel').style.display = panel === 'admin-signin' ? '' : 'none';
-        document.getElementById('modal-panel').style.display = 'none';
-    }
-    function setActiveNav(link) {
-        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-        link.classList.add('active');
-    }
+      }
+
+      document.getElementById('profile-btn').onclick = () => showPanel('profile');
+      document.getElementById('applications-btn').onclick = () => showPanel('applications');
+      document.getElementById('bans-btn').onclick = () => showPanel('bans');
+      document.getElementById('admin-btn').onclick = () => showPanel('admin');
+      document.getElementById('nav-home').onclick = (e) => { e.preventDefault(); showPanel('main'); };
+    });
 
     // --- Profile lookup logic ---
     document.getElementById('search-form').onsubmit = async function(e) {
@@ -408,5 +390,15 @@
         window.location.href = '/api/auth/discord';
     };
     </script>
+    <div id="main-content">Main page content here</div>
+<div id="profile-panel" style="display:none;">Profile content here</div>
+<div id="applications-panel" style="display:none;">Applications content here</div>
+<div id="bans-panel" style="display:none;">Bans content here</div>
+<div id="admin-panel" style="display:none;">Admin panel content here</div>
+<button id="profile-btn">Profile</button>
+<button id="applications-btn">Applications</button>
+<button id="bans-btn">Bans</button>
+<button id="admin-btn">Admin</button>
+
 </body>
 </html>
