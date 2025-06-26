@@ -20,6 +20,7 @@
             align-items: center;
             padding: 1em 0.5em;
             gap: 2em;
+            position: relative;
         }
         nav a {
             color: #fff;
@@ -46,6 +47,44 @@
         #discord-login-btn:hover {
             background: #e3eaff;
         }
+        #profile-menu-btn {
+            display: flex;
+            align-items: center;
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 1em;
+        }
+        #profile-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            margin-right: 0.5em;
+        }
+        #profile-dropdown {
+            display: none;
+            position: absolute;
+            right: 1em;
+            top: 4em;
+            background: #fff;
+            color: #222;
+            border-radius: 8px;
+            box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+            min-width: 180px;
+            z-index: 100;
+        }
+        #profile-dropdown button {
+            width: 100%;
+            background: none;
+            border: none;
+            padding: 1em;
+            text-align: left;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        #profile-dropdown button:hover {
+            background: #e3eaff;
+        }
         main {
             display: flex;
             flex-direction: column;
@@ -63,9 +102,26 @@
             width: 100%;
             text-align: center;
         }
-        .center-card h1 {
+        .admin-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 1em;
+            margin-top: 1em;
+        }
+        .admin-btns button {
+            padding: 0.7em 1em;
+            border-radius: 6px;
+            border: none;
+            background: #2976e2;
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.2s;
+        }
+        .admin-btns button:hover {
+            background: #3ec6fa;
             color: #2976e2;
-            margin-bottom: 0.5em;
         }
         @media (max-width: 600px) {
             .center-card {
@@ -74,6 +130,10 @@
             nav {
                 flex-direction: column;
                 gap: 0.5em;
+            }
+            #profile-dropdown {
+                right: 0.5em;
+                top: 5em;
             }
         }
     </style>
@@ -84,6 +144,15 @@
         <a href="#" id="search-link">Profile Lookup</a>
         <a href="#" id="admin-link">Admin</a>
         <button id="discord-login-btn" type="button" aria-label="Login with Discord">Login with Discord</button>
+        <button id="profile-menu-btn" style="display:none;">
+            <img id="profile-avatar" src="" alt="Profile" />
+            <span id="profile-username"></span>
+        </button>
+        <div id="profile-dropdown">
+            <button id="view-profile-btn">View Profile</button>
+            <button id="view-bans-btn">View Bans</button>
+            <button id="view-applications-btn">View Applications</button>
+        </div>
     </nav>
     <main>
         <div class="center-card" id="main-content">
@@ -105,8 +174,13 @@
         <!-- Admin Panel (hidden by default) -->
         <div class="center-card" id="admin-panel" style="display:none;">
             <h2>Admin Panel</h2>
-            <!-- Admin content goes here -->
-            <p>Welcome, admin! Here you can manage users, view logs, etc.</p>
+            <div class="admin-btns">
+                <button id="edit-profile-btn">Edit a Profile</button>
+                <button id="add-application-btn">Add Application</button>
+                <button id="log-ban-btn">Log a Ban</button>
+                <button id="view-logs-btn">Logs</button>
+            </div>
+            <div id="admin-action-panel" style="margin-top:2em;"></div>
         </div>
         <!-- Admin Sign-in Panel (hidden by default) -->
         <div class="center-card" id="admin-signin-panel" style="display:none;">
@@ -117,51 +191,92 @@
             </form>
             <div id="admin-signin-error" style="color:red;margin-top:1em;"></div>
         </div>
+        <!-- Modal for profile/applications/bans/logs -->
+        <div class="center-card" id="modal-panel" style="display:none;position:fixed;top:10vh;left:50%;transform:translateX(-50%);z-index:200;max-width:95vw;"></div>
     </main>
     <script>
-    // Discord login button
-    document.getElementById('discord-login-btn').onclick = function() {
-        window.location.href = '/api/auth/discord';
+    // --- CONFIG ---
+    const ADMIN_PASSWORD = 'your_admin_password'; // <-- Set your admin password here
+
+    // --- Discord login logic ---
+    function onDiscordLogin(user) {
+        document.getElementById('discord-login-btn').style.display = 'none';
+        const profileBtn = document.getElementById('profile-menu-btn');
+        profileBtn.style.display = 'flex';
+        document.getElementById('profile-avatar').src = user.avatar;
+        document.getElementById('profile-username').textContent = user.username;
+        profileBtn.onclick = function() {
+            const dropdown = document.getElementById('profile-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        };
+        // Hide dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!profileBtn.contains(e.target) && !document.getElementById('profile-dropdown').contains(e.target)) {
+                document.getElementById('profile-dropdown').style.display = 'none';
+            }
+        });
+    }
+
+    // Simulate Discord login (replace with real fetch/session logic)
+    // Example: fetch('/api/me').then(res => res.json()).then(user => onDiscordLogin(user));
+    // For demo:
+    // onDiscordLogin({ username: "DemoUser", avatar: "https://cdn.discordapp.com/embed/avatars/0.png" });
+
+    // --- Profile dropdown actions ---
+    document.getElementById('view-profile-btn').onclick = function() {
+        showModal('Profile', '<div>Loading profile...</div>');
+        // Fetch and display profile info here
+    };
+    document.getElementById('view-bans-btn').onclick = function() {
+        showModal('Bans', '<div>Loading bans...</div>');
+        // Fetch and display ban info here
+    };
+    document.getElementById('view-applications-btn').onclick = function() {
+        showModal('Applications', '<div>Loading applications...</div>');
+        // Fetch and display applications here
     };
 
-    // Navigation logic
+    // --- Modal helper ---
+    function showModal(title, content) {
+        const modal = document.getElementById('modal-panel');
+        modal.innerHTML = `<h2>${title}</h2><div>${content}</div><button onclick="document.getElementById('modal-panel').style.display='none'">Close</button>`;
+        modal.style.display = 'block';
+    }
+
+    // --- Navigation logic ---
     document.getElementById('nav-home').onclick = function(e) {
         e.preventDefault();
-        document.getElementById('main-content').style.display = '';
-        document.getElementById('search-panel').style.display = 'none';
-        document.getElementById('admin-panel').style.display = 'none';
-        this.classList.add('active');
-        document.getElementById('search-link').classList.remove('active');
-        document.getElementById('admin-link').classList.remove('active');
+        showPanel('main');
+        setActiveNav(this);
     };
     document.getElementById('search-link').onclick = function(e) {
         e.preventDefault();
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('search-panel').style.display = '';
-        document.getElementById('admin-panel').style.display = 'none';
-        this.classList.add('active');
-        document.getElementById('nav-home').classList.remove('active');
-        document.getElementById('admin-link').classList.remove('active');
+        showPanel('search');
+        setActiveNav(this);
     };
     document.getElementById('admin-link').onclick = function(e) {
         e.preventDefault();
-        document.getElementById('main-content').style.display = 'none';
-        document.getElementById('search-panel').style.display = 'none';
-        document.getElementById('admin-panel').style.display = '';
-        this.classList.add('active');
-        document.getElementById('nav-home').classList.remove('active');
-        document.getElementById('search-link').classList.remove('active');
+        if (window.isAdmin) {
+            showPanel('admin');
+        } else {
+            showPanel('admin-signin');
+        }
+        setActiveNav(this);
     };
 
-    // Example: Show admin tab after successful admin login
-    function showAdminTab() {
-        document.getElementById('admin-link').style.display = '';
+    function showPanel(panel) {
+        document.getElementById('main-content').style.display = panel === 'main' ? '' : 'none';
+        document.getElementById('search-panel').style.display = panel === 'search' ? '' : 'none';
+        document.getElementById('admin-panel').style.display = panel === 'admin' ? '' : 'none';
+        document.getElementById('admin-signin-panel').style.display = panel === 'admin-signin' ? '' : 'none';
+        document.getElementById('modal-panel').style.display = 'none';
+    }
+    function setActiveNav(link) {
+        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
     }
 
-    // Call showAdminTab() after admin login is successful
-    // showAdminTab();
-
-    // Profile lookup logic (example, adjust endpoint as needed)
+    // --- Profile lookup logic ---
     document.getElementById('search-form').onsubmit = async function(e) {
         e.preventDefault();
         const query = document.getElementById('search-query').value.trim();
@@ -184,48 +299,67 @@
         }
     };
 
-    // Admin sign-in logic (example, adjust endpoint as needed)
-    const adminTab = document.getElementById('admin-link');
-const adminPanel = document.getElementById('admin-panel');
-const adminSigninPanel = document.getElementById('admin-signin-panel');
-const adminSigninForm = document.getElementById('admin-signin-form');
-const adminSigninError = document.getElementById('admin-signin-error');
-const mainContent = document.getElementById('main-content');
-const searchPanel = document.getElementById('search-panel');
+    // --- Admin sign-in logic ---
+    document.getElementById('admin-signin-form').onsubmit = function(e) {
+        e.preventDefault();
+        const password = document.getElementById('admin-password').value;
+        if (password === ADMIN_PASSWORD) {
+            window.isAdmin = true;
+            showPanel('admin');
+        } else {
+            document.getElementById('admin-signin-error').textContent = 'Incorrect password.';
+        }
+    };
 
-let isAdmin = false;
+    // --- Admin panel button actions ---
+    document.getElementById('edit-profile-btn').onclick = function() {
+        showModal('Edit Profile', `
+            <form id="edit-profile-form">
+                <input type="text" id="edit-userid" placeholder="User ID" required style="width:90%;padding:0.5em;margin-bottom:1em;"><br>
+                <input type="text" id="edit-username" placeholder="Username" required style="width:90%;padding:0.5em;margin-bottom:1em;"><br>
+                <textarea id="edit-notes" placeholder="Notes (comma separated)" style="width:90%;padding:0.5em;margin-bottom:1em;"></textarea><br>
+                <div id="edit-banned-status">Banned: ...</div>
+                <button type="submit">Save</button>
+            </form>
+        `);
+        // TODO: Add JS to auto-load notes and banned status when user ID is entered
+    };
+    document.getElementById('add-application-btn').onclick = function() {
+        showModal('Add Application', `
+            <form id="add-app-form">
+                <input type="text" id="app-username" placeholder="Username" required style="width:90%;padding:0.5em;margin-bottom:1em;"><br>
+                <input type="text" id="app-userid" placeholder="User ID" required style="width:90%;padding:0.5em;margin-bottom:1em;"><br>
+                <select id="app-status" required style="width:90%;padding:0.5em;margin-bottom:1em;">
+                    <option value="">Select Status</option>
+                    <option value="pass">Pass</option>
+                    <option value="fail">Fail</option>
+                </select><br>
+                <textarea id="app-notes" placeholder="Notes / Reason" style="width:90%;padding:0.5em;margin-bottom:1em;"></textarea><br>
+                <div id="past-applications">Past applications will show here.</div>
+                <button type="submit">Add Application</button>
+            </form>
+        `);
+        // TODO: Add JS to load past applications for this user
+    };
+    document.getElementById('log-ban-btn').onclick = function() {
+        showModal('Log a Ban', `
+            <form id="log-ban-form">
+                <input type="text" id="ban-userid" placeholder="User ID" required style="width:90%;padding:0.5em;margin-bottom:1em;"><br>
+                <input type="text" id="ban-username" placeholder="Username" required style="width:90%;padding:0.5em;margin-bottom:1em;"><br>
+                <textarea id="ban-reason" placeholder="Reason" style="width:90%;padding:0.5em;margin-bottom:1em;"></textarea><br>
+                <button type="submit">Log Ban</button>
+            </form>
+        `);
+    };
+    document.getElementById('view-logs-btn').onclick = function() {
+        showModal('Logs', '<div>Loading logs...</div>');
+        // TODO: Fetch and display logs
+    };
 
-// Show admin sign-in if not logged in, else show admin panel
-adminTab.onclick = function(e) {
-    e.preventDefault();
-    mainContent.style.display = 'none';
-    searchPanel.style.display = 'none';
-    if (isAdmin) {
-        adminPanel.style.display = '';
-        adminSigninPanel.style.display = 'none';
-    } else {
-        adminPanel.style.display = 'none';
-        adminSigninPanel.style.display = '';
-        adminSigninError.textContent = '';
-    }
-    adminTab.classList.add('active');
-    document.getElementById('nav-home').classList.remove('active');
-    document.getElementById('search-link').classList.remove('active');
-};
-
-// Handle admin sign-in
-adminSigninForm.onsubmit = function(e) {
-    e.preventDefault();
-    const password = document.getElementById('admin-password').value;
-    // Replace 'your_admin_password' with your actual password
-    if (password === 'your_admin_password') {
-        isAdmin = true;
-        adminSigninPanel.style.display = 'none';
-        adminPanel.style.display = '';
-    } else {
-        adminSigninError.textContent = 'Incorrect password.';
-    }
-};
+    // --- Discord login button ---
+    document.getElementById('discord-login-btn').onclick = function() {
+        window.location.href = '/api/auth/discord';
+    };
     </script>
 </body>
 </html>
