@@ -1,84 +1,62 @@
 document.addEventListener('DOMContentLoaded', async function() {
-  // Panel references (put these near the top, after DOMContentLoaded)
-const mainContent = document.getElementById('main-content');
-const adminPanel = document.getElementById('admin-panel');
-const searchPanel = document.getElementById('search-panel');
-const adminSignInPanel = document.getElementById('admin-signin-panel');
-const logsPanel = document.getElementById('logs-panel');
-const profilePanel = document.getElementById('profile-panel');
-const applicationsPanel = document.getElementById('applications-panel');
-const bansPanel = document.getElementById('bans-panel');
-
-    // UI elements
-    const adminLink = document.getElementById('admin-link');
-    const searchLink = document.getElementById('search-link');
-    const discordLoginDiv = document.getElementById('discord-login');
-    const adminForm = document.getElementById('admin-form');
-    const discordLoginBtn = document.getElementById('discord-login-btn');
-    const adminSignInBtn = document.getElementById('admin-signin-btn');
-    const adminSignInForm = document.getElementById('admin-signin-form');
-    const adminSignInMessage = document.getElementById('admin-signin-message');
-    // Logs button and panel
-    let logsBtn = document.getElementById('logs-btn');
-    if (!logsBtn) {
-        logsBtn = document.createElement('button');
-        logsBtn.id = 'logs-btn';
-        logsBtn.textContent = 'Logs';
-        logsBtn.style.display = 'none';
-        logsBtn.style.marginLeft = '1em';
-        document.querySelector('nav').appendChild(logsBtn);
-    }
-    if (!logsPanel) {
-        logsPanel = document.createElement('div');
-        logsPanel.id = 'logs-panel';
-        logsPanel.className = 'container';
-        logsPanel.style.display = 'none';
-        logsPanel.innerHTML = `<h2>Admin Logs</h2><div id="logs-content"></div><button id="close-logs-btn" style="margin-top:1em;">Close</button>`;
-        document.body.appendChild(logsPanel);
-    }
+    // Panel references
+    const mainContent = document.getElementById('main-content');
+    const adminPanel = document.getElementById('admin-panel');
+    const searchPanel = document.getElementById('search-panel');
+    const profilePanel = document.getElementById('profile-panel');
+    const applicationsPanel = document.getElementById('applications-panel');
+    const bansPanel = document.getElementById('bans-panel');
 
     // Helper to show/hide panels
-function showPanel(panel) {
-    document.getElementById('main-content').style.display = panel === 'main' ? '' : 'none';
-    document.getElementById('profile-panel').style.display = panel === 'profile' ? '' : 'none';
-    document.getElementById('applications-panel').style.display = panel === 'applications' ? '' : 'none';
-    document.getElementById('bans-panel').style.display = panel === 'bans' ? '' : 'none';
-    document.getElementById('admin-panel').style.display = panel === 'admin' ? '' : 'none';
-    document.getElementById('search-panel').style.display = panel === 'search' ? '' : 'none';
-}
+    function showPanel(panel) {
+        mainContent.style.display = panel === 'main' ? '' : 'none';
+        profilePanel.style.display = panel === 'profile' ? '' : 'none';
+        applicationsPanel.style.display = panel === 'applications' ? '' : 'none';
+        bansPanel.style.display = panel === 'bans' ? '' : 'none';
+        adminPanel.style.display = panel === 'admin' ? '' : 'none';
+        searchPanel.style.display = panel === 'search' ? '' : 'none';
+    }
 
-// Navigation button handlers
-document.getElementById('nav-home').onclick = function(e) {
-    e.preventDefault();
-    showPanel('main');
-    setActiveNav(this);
-};
-document.getElementById('search-link').onclick = function(e) {
-    e.preventDefault();
-    showPanel('search');
-    setActiveNav(this);
-};
-document.getElementById('admin-link').onclick = function(e) {
-    e.preventDefault();
-    showPanel('admin');
-    setActiveNav(this);
-};
-document.getElementById('profile-btn').onclick = function() { showPanel('profile'); };
-document.getElementById('applications-btn').onclick = function() { showPanel('applications'); };
-document.getElementById('bans-btn').onclick = function() { showPanel('bans'); };
-document.getElementById('admin-btn').onclick = function() { showPanel('admin'); };
+    // Navigation button handlers
+    const navHome = document.getElementById('nav-home');
+    if (navHome) navHome.onclick = function(e) {
+        e.preventDefault();
+        showPanel('main');
+        setActiveNav(this);
+    };
+    const searchLink = document.getElementById('search-link');
+    if (searchLink) searchLink.onclick = function(e) {
+        e.preventDefault();
+        showPanel('search');
+        setActiveNav(this);
+    };
+    const adminLink = document.getElementById('admin-link');
+    if (adminLink) adminLink.onclick = function(e) {
+        e.preventDefault();
+        showPanel('admin');
+        setActiveNav(this);
+    };
+    const profileBtn = document.getElementById('profile-btn');
+    if (profileBtn) profileBtn.onclick = function() { showPanel('profile'); };
+    const applicationsBtn = document.getElementById('applications-btn');
+    if (applicationsBtn) applicationsBtn.onclick = function() { showPanel('applications'); };
+    const bansBtn = document.getElementById('bans-btn');
+    if (bansBtn) bansBtn.onclick = function() { showPanel('bans'); };
+    const adminBtn = document.getElementById('admin-btn');
+    if (adminBtn) adminBtn.onclick = function() { showPanel('admin'); };
 
-// Optional: highlight active nav link
-function setActiveNav(el) {
-    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
-    if (el) el.classList.add('active');
-}
+    // Optional: highlight active nav link
+    function setActiveNav(el) {
+        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+        if (el) el.classList.add('active');
+    }
+
+    // Remove black text fix: ensure all buttons use default or CSS-styled color
+    document.querySelectorAll('nav button, nav a').forEach(el => {
+        el.style.color = '';
+    });
 
     // Navigation
-    if (searchLink) searchLink.onclick = () => { showPanel('search'); return false; };
-    const homeLink = document.querySelector('nav a[href="index.html"]');
-    if (homeLink) homeLink.onclick = () => { showPanel('main'); return false; };
-
     const discordBtn = document.getElementById('discord-login-btn') || document.getElementById('discord-login-btn-home');
     if (discordBtn) {
       discordBtn.onclick = function() {
