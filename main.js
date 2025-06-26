@@ -309,4 +309,61 @@ document.addEventListener('DOMContentLoaded', async function() {
         searchPanel.style.display = 'none';
       };
     }
+
+    // Run this after a successful login (e.g., after fetching /api/me)
+    async function checkLogin() {
+        const res = await fetch('/api/me');
+        if (res.ok) {
+            const user = await res.json();
+            // Hide login button
+            document.getElementById('discord-login-btn').style.display = 'none';
+            // Show profile info
+            document.getElementById('profile-menu-btn').style.display = 'flex';
+            document.getElementById('profile-avatar').src = user.avatar;
+            document.getElementById('profile-username').textContent = user.username;
+            // If admin
+            if (user.hasAdminRole || user.isAdmin) {
+                document.getElementById('admin-panel-link').style.display = 'block';
+            }
+        } else {
+            // Not logged in
+            document.getElementById('discord-login-btn').style.display = 'block';
+            document.getElementById('profile-menu-btn').style.display = 'none';
+            document.getElementById('admin-panel-link').style.display = 'none';
+        }
+    }
+
+    // Call this on page load
+    checkLogin();
+
+    // After fetching user profile:
+    const resultsDiv = document.getElementById('search-results');
+    if (resultsDiv && user) {
+        resultsDiv.innerHTML = `
+          <div>
+            <strong>Username:</strong> ${user.username}<br>
+            <strong>User ID:</strong> ${user.user_id}<br>
+            <strong>Notes:</strong> ${user.notes && user.notes.length ? user.notes.join(', ') : 'None'}<br>
+            <strong>Banned:</strong> ${user.banned ? 'Yes' : 'No'}<br>
+            <strong>Ban Reason:</strong> ${user.ban_reason || 'N/A'}<br>
+            <button id="view-apps-btn">View Applications</button>
+            <button id="view-bans-btn">View Bans</button>
+          </div>
+        `;
+
+        document.getElementById('view-apps-btn').onclick = async function() {
+            const res = await fetch(`/api/users/${user.user_id}/applications`);
+            const apps = await res.json();
+            showModal('Applications', apps.length
+                ? apps.map(a => `<div><strong>Status:</strong> ${a.status}<br><strong>Reason:</strong> ${a.reason}</div>`).join('<hr>')
+                : '<div>No applications found.</div>');
+        };
+        document.getElementById('view-bans-btn').onclick = async function() {
+            const res = await fetch(`/api/users/${user.user_id}/bans`);
+            const bans = await res.json();
+            showModal('Bans', bans.length
+                ? bans.map(b => `<div><strong>Admin:</strong> ${b.admin}<br><strong>Reason:</strong> ${b.changes?.reason || 'N/A'}</div>`).join('<hr>')
+                : '<div>No bans found.</div>');
+        };
+    }
 });

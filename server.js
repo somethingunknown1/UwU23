@@ -82,8 +82,6 @@ app.get('/api/auth/discord/callback', async (req, res) => {
       id: user.id,
       hasAdminRole
     };
-
-    // Upsert user in DB
     await pool.query(
       `INSERT INTO users (user_id, username, avatar)
        VALUES ($1, $2, $3)

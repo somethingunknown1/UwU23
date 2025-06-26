@@ -143,16 +143,12 @@
         <a href="index.html" id="nav-home" class="active">Home</a>
         <a href="#" id="search-link">Profile Lookup</a>
         <a href="#" id="admin-link">Admin</a>
-        <button id="discord-login-btn" type="button" aria-label="Login with Discord">Login with Discord</button>
-        <button id="profile-menu-btn" style="display:none;">
-            <img id="profile-avatar" src="" alt="Profile" />
+        <button id="discord-login-btn">Login with Discord</button>
+        <div id="profile-menu-btn" style="display:none;">
+            <img id="profile-avatar" src="" alt="Profile" style="width:32px;height:32px;border-radius:50%;">
             <span id="profile-username"></span>
-        </button>
-        <div id="profile-dropdown">
-            <button id="view-profile-btn">View Profile</button>
-            <button id="view-bans-btn">View Bans</button>
-            <button id="view-applications-btn">View Applications</button>
         </div>
+        <a id="admin-panel-link" href="/admin" style="display:none;">Admin Panel</a>
     </nav>
     <main>
         <div class="center-card" id="main-content">
