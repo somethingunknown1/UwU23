@@ -7,50 +7,29 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <nav>
-        <a href="#" id="home-link">Home</a>
-        <a href="#" id="profile-lookup-link">Profile Lookup</a>
-        <a href="#" id="admin-link">Admin</a>
-        <button id="discord-login-btn-home" type="button">Login with Discord</button>
+    <div id="admin-warning" style="display:none; background: #222; color: #fff; padding: 0.75em 1em; text-align: center; font-size: 1rem;">
+        Make sure to sign in with Discord too or it may not work.
+    </div>
+    <nav style="display: flex; justify-content: space-between; align-items: center; background: #1976d2; color: #fff; padding: 1em;">
+        <div>
+            <a href="index.html" style="color: #fff;">Home</a>
+            <a href="#" id="search-link" style="color: #fff;">Search</a>
+            <a href="#" id="admin-link" style="color: #fff; display:none;">Admin Panel</a>
+        </div>
+        <button id="admin-signin-btn" style="background: #fff; color: #1976d2; border: none; padding: 0.5em 1em; border-radius: 4px; cursor: pointer;">Admin Sign In</button>
     </nav>
     <main>
-        <!-- Home -->
         <div class="container" id="main-content">
-            <h1>Welcome to Cursed Layers!</h1>
-            <p>View your application results, see why you failed, and check any notes your account may have.</p>
-        </div>
-        <!-- Profile Lookup -->
-        <div class="container" id="profile-lookup-panel" style="display:none;">
-            <h2>Profile Lookup</h2>
-            <form id="profile-lookup-form">
-                <input type="text" id="profile-lookup-query" placeholder="Enter Username or User ID" required />
-                <button type="submit">Lookup</button>
-            </form>
-            <div style="margin-top:1em;">
-                <button id="ban-lookup-btn" type="button">Ban Lookup</button>
-                <button id="application-lookup-btn" type="button">Application Lookup</button>
+            <h1>Hello, welcome to Cursed Layers website!</h1>
+            <p>
+                Here you can view your application results, see why you failed, and check any notes your account may have.<br>
+                If you find any bugs, notify <strong>cursedradiodemon</strong> so I can fix them.
+            </p>
+            <div id="discord-login-home" style="margin-top:2em;">
+                <button id="discord-login-btn-home" type="button">Login with Discord</button>
             </div>
-            <div id="profile-lookup-results"></div>
         </div>
-        <!-- Ban Lookup -->
-        <div class="container" id="ban-lookup-panel" style="display:none;">
-            <h2>Ban Lookup</h2>
-            <form id="ban-lookup-form">
-                <input type="text" id="ban-lookup-query" placeholder="Enter Username or User ID" required />
-                <button type="submit">Lookup Ban</button>
-            </form>
-            <div id="ban-lookup-results"></div>
-        </div>
-        <!-- Application Lookup -->
-        <div class="container" id="application-lookup-panel" style="display:none;">
-            <h2>Application Lookup</h2>
-            <form id="application-lookup-form">
-                <input type="text" id="application-lookup-query" placeholder="Enter Username or User ID" required />
-                <button type="submit">Lookup Application</button>
-            </form>
-            <div id="application-lookup-results"></div>
-        </div>
-        <!-- Admin Sign In -->
+        <!-- Admin Sign In Panel (hidden by default) -->
         <div class="container" id="admin-signin-panel" style="display:none;">
             <h2>Admin Sign In</h2>
             <form id="admin-signin-form">
@@ -59,52 +38,73 @@
             </form>
             <div id="admin-signin-message"></div>
         </div>
-        <!-- Admin Panel -->
+        <!-- Admin Panel (hidden by default) -->
         <div class="container" id="admin-panel" style="display:none;">
             <h2>Admin Panel</h2>
-            <div style="margin-bottom:1em;">
-                <button id="log-ban-btn" type="button">Log a Ban</button>
-                <button id="log-application-btn" type="button">Log an Application</button>
-                <button id="update-profile-btn" type="button">Update a Profile</button>
-                <button id="view-logs-btn" type="button">View Logs</button>
-            </div>
-            <!-- Log a Ban -->
-            <form id="log-ban-form" style="display:none;">
-                <h3>Log a Ban</h3>
-                <input type="text" id="ban-username" placeholder="Username" required />
-                <input type="text" id="ban-userid" placeholder="User ID" required />
-                <input type="text" id="ban-platform" placeholder="Platform" required />
-                <input type="text" id="ban-reason" placeholder="Reason" required />
-                <button type="submit">Submit Ban</button>
+            <div>Signed in as: <span id="admin-username-display"></span></div>
+            <form id="admin-form" style="margin-top:2em;">
+                <label for="admin-username">Discord Username</label>
+                <input type="text" id="admin-username" placeholder="Discord Username" required />
+
+                <label for="admin-userid">Discord User ID</label>
+                <input type="text" id="admin-userid" placeholder="Discord User ID" required />
+
+                <label for="admin-notes">Notes</label>
+                <textarea id="admin-notes" placeholder="Notes (comma separated)"></textarea>
+
+                <label for="admin-app-status">Pass/Fail</label>
+                <input type="text" id="admin-app-status" placeholder="Pass/Fail" />
+
+                <label for="admin-app-reason">Reason</label>
+                <input type="text" id="admin-app-reason" placeholder="Reason" />
+
+                <button type="submit">Add/Update User</button>
             </form>
-            <!-- Log an Application -->
-            <form id="log-application-form" style="display:none;">
-                <h3>Log an Application</h3>
-                <input type="text" id="app-username" placeholder="Username" required />
-                <input type="text" id="app-userid" placeholder="User ID" required />
-                <input type="text" id="app-status" placeholder="Pass/Fail" required />
-                <input type="text" id="app-improve" placeholder="Things to Improve" />
-                <button type="submit">Submit Application</button>
-            </form>
-            <!-- Update a Profile -->
-            <form id="update-profile-form" style="display:none;">
-                <h3>Update a Profile</h3>
-                <input type="text" id="update-username" placeholder="Username" required />
-                <input type="text" id="update-userid" placeholder="User ID" required />
-                <label for="update-notes">Notes</label>
-                <textarea id="update-notes" placeholder="Notes (comma separated)"></textarea>
-                <ul id="update-notes-list"></ul>
-                <div id="ban-status"></div>
-                <button type="submit">Save Profile</button>
-            </form>
-            <!-- Logs -->
-            <div id="logs-panel" style="display:none;">
-                <h3>Change Logs</h3>
-                <div id="logs-results"></div>
-            </div>
             <div id="admin-message"></div>
+        </div>
+        <!-- Search Panel (hidden by default) -->
+        <div class="container" id="search-panel" style="display:none;">
+            <h2>Search User</h2>
+            <form id="search-form">
+                <input type="text" id="search-query" placeholder="Enter Username or User ID" required />
+                <button type="submit">Search</button>
+            </form>
+            <div id="search-results"></div>
         </div>
     </main>
     <script src="main.js"></script>
+    <script>
+    // Add Discord login from home page
+    document.addEventListener('DOMContentLoaded', function() {
+        const btn = document.getElementById('discord-login-btn-home');
+        if (btn) {
+            btn.onclick = function() {
+                window.location.href = '/api/auth/discord';
+            };
+        }
+        // Show admin warning after admin sign in
+        const adminSignInForm = document.getElementById('admin-signin-form');
+        if (adminSignInForm) {
+            adminSignInForm.addEventListener('submit', function(e) {
+                setTimeout(function() {
+                    document.getElementById('admin-warning').style.display = '';
+                }, 100); // Show after sign in
+            });
+        }
+        // Show admin panel
+        document.getElementById('admin-link').onclick = function() {
+          document.getElementById('main-content').style.display = 'none';
+          document.getElementById('search-panel').style.display = 'none';
+          document.getElementById('admin-panel').style.display = '';
+          document.getElementById('admin-link').style.display = '';
+        };
+        // Show search panel
+        document.getElementById('search-link').onclick = function() {
+          document.getElementById('main-content').style.display = 'none';
+          document.getElementById('admin-panel').style.display = 'none';
+          document.getElementById('search-panel').style.display = '';
+        };
+    });
+    </script>
 </body>
 </html>

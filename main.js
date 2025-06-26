@@ -124,27 +124,34 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Search form submit
     const searchForm = document.getElementById('search-form');
+    const searchInput = document.getElementById('search-input');
+    const searchResults = document.getElementById('search-results');
+
     if (searchForm) {
-        searchForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const q = document.getElementById('search-query').value;
-            const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`);
-            const users = await res.json();
-            const resultsDiv = document.getElementById('search-results');
-            if (!users.length) {
-                resultsDiv.textContent = 'No user found.';
-                return;
-            }
-            resultsDiv.innerHTML = users.map(u => `
-                <div class="user-profile">
-                    <h3>${u.username} (${u.userId})</h3>
-                    <strong>Notes:</strong>
-                    <ul>${(u.notes||[]).map(n => `<li>${n}</li>`).join('')}</ul>
-                    <strong>Applications:</strong>
-                    <ul>${(u.applications||[]).map(a => `<li>${a.status} - ${a.reason} (${a.date ? new Date(a.date).toLocaleString() : ''})</li>`).join('')}</ul>
-                </div>
-            `).join('');
-        };
+      searchForm.onsubmit = async function (e) {
+        e.preventDefault();
+        const query = searchInput.value.trim();
+        if (!query) return;
+
+        searchResults.textContent = 'Searching...';
+
+        try {
+          const res = await fetch(`/api/users/search?q=${encodeURIComponent(query)}`);
+          if (!res.ok) throw new Error('User not found');
+          const user = await res.json();
+
+          // Display user info (customize as needed)
+          searchResults.innerHTML = `
+            <div class="profile-card">
+              <h3>${user.username}</h3>
+              <p>User ID: ${user.id}</p>
+              <p>Notes: ${user.notes ? user.notes.join(', ') : 'None'}</p>
+            </div>
+          `;
+        } catch (err) {
+          searchResults.textContent = 'User not found.';
+        }
+      };
     }
 
     let adminSignedIn = false;
@@ -279,4 +286,26 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // Example usage (call this when a ban is issued)
     addBanLog(1, 'AdminName', 'Ban', { reason: 'Rule violation' });
+
+    const adminTab = document.getElementById('admin-tab');
+    const adminPanel = document.getElementById('admin-panel');
+
+    if (adminTab && adminPanel) {
+      adminTab.onclick = () => {
+        // Hide other panels if needed
+        mainContent.style.display = 'none';
+        searchPanel.style.display = 'none';
+        adminPanel.style.display = '';
+      };
+    }
+
+    // Optionally, add navigation back to main/search
+    const navHome = document.getElementById('nav-home');
+    if (navHome) {
+      navHome.onclick = () => {
+        adminPanel.style.display = 'none';
+        mainContent.style.display = '';
+        searchPanel.style.display = 'none';
+      };
+    }
 });
