@@ -100,7 +100,7 @@ app.get('/api/users', (req, res) => {
 app.get('/api/auth/discord', (req, res) => {
     const params = new URLSearchParams({
         client_id: '1387208510156177458',
-        redirect_uri: 'http://localhost:3000/api/auth/discord/callback',
+        redirect_uri: 'https://uwu23-production.up.railway.app/api/auth/discord/callback',
         response_type: 'code',
         scope: 'identify guilds.members.read'
     });
