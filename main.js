@@ -39,14 +39,39 @@ const bansPanel = document.getElementById('bans-panel');
 
     // Helper to show/hide panels
 function showPanel(panel) {
-    if (mainContent) mainContent.style.display = panel === 'main' ? '' : 'none';
-    if (profilePanel) profilePanel.style.display = panel === 'profile' ? '' : 'none';
-    if (applicationsPanel) applicationsPanel.style.display = panel === 'applications' ? '' : 'none';
-    if (bansPanel) bansPanel.style.display = panel === 'bans' ? '' : 'none';
-    if (adminPanel) adminPanel.style.display = panel === 'admin' ? '' : 'none';
-    if (searchPanel) searchPanel.style.display = panel === 'search' ? '' : 'none';
-    if (adminSignInPanel) adminSignInPanel.style.display = panel === 'admin-signin' ? '' : 'none';
-    if (logsPanel) logsPanel.style.display = panel === 'logs' ? '' : 'none';
+    document.getElementById('main-content').style.display = panel === 'main' ? '' : 'none';
+    document.getElementById('profile-panel').style.display = panel === 'profile' ? '' : 'none';
+    document.getElementById('applications-panel').style.display = panel === 'applications' ? '' : 'none';
+    document.getElementById('bans-panel').style.display = panel === 'bans' ? '' : 'none';
+    document.getElementById('admin-panel').style.display = panel === 'admin' ? '' : 'none';
+    document.getElementById('search-panel').style.display = panel === 'search' ? '' : 'none';
+}
+
+// Navigation button handlers
+document.getElementById('nav-home').onclick = function(e) {
+    e.preventDefault();
+    showPanel('main');
+    setActiveNav(this);
+};
+document.getElementById('search-link').onclick = function(e) {
+    e.preventDefault();
+    showPanel('search');
+    setActiveNav(this);
+};
+document.getElementById('admin-link').onclick = function(e) {
+    e.preventDefault();
+    showPanel('admin');
+    setActiveNav(this);
+};
+document.getElementById('profile-btn').onclick = function() { showPanel('profile'); };
+document.getElementById('applications-btn').onclick = function() { showPanel('applications'); };
+document.getElementById('bans-btn').onclick = function() { showPanel('bans'); };
+document.getElementById('admin-btn').onclick = function() { showPanel('admin'); };
+
+// Optional: highlight active nav link
+function setActiveNav(el) {
+    document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
 }
 
     // Navigation
