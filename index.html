@@ -239,7 +239,17 @@
         modal.style.display = 'block';
     }
 
-    // --- Navigation logic ---
+    // --- Panel show/hide logic ---
+    function showPanel(panel) {
+        document.getElementById('main-content').style.display = panel === 'main' ? '' : 'none';
+        document.getElementById('profile-panel').style.display = panel === 'profile' ? '' : 'none';
+        document.getElementById('applications-panel').style.display = panel === 'applications' ? '' : 'none';
+        document.getElementById('bans-panel').style.display = panel === 'bans' ? '' : 'none';
+        document.getElementById('admin-panel').style.display = panel === 'admin' ? '' : 'none';
+        document.getElementById('search-panel').style.display = panel === 'search' ? '' : 'none';
+    }
+
+    // --- Navigation button handlers ---
     document.getElementById('nav-home').onclick = function(e) {
         e.preventDefault();
         showPanel('main');
@@ -252,15 +262,19 @@
     };
     document.getElementById('admin-link').onclick = function(e) {
         e.preventDefault();
-        fetch('/api/admin/session').then(res => res.json()).then(data => {
-            if (data.isAdmin) {
-                showPanel('admin');
-            } else {
-                showPanel('admin-signin');
-            }
-        });
+        showPanel('admin');
         setActiveNav(this);
     };
+    document.getElementById('profile-btn').onclick = function() { showPanel('profile'); };
+    document.getElementById('applications-btn').onclick = function() { showPanel('applications'); };
+    document.getElementById('bans-btn').onclick = function() { showPanel('bans'); };
+    document.getElementById('admin-btn').onclick = function() { showPanel('admin'); };
+
+    // --- Optional: highlight active nav link ---
+    function setActiveNav(el) {
+        document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+        if (el) el.classList.add('active');
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       function showPanel(panel) {
